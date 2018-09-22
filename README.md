@@ -8,8 +8,10 @@ This project uses codes from following projects:
 
 ## Dependency
 
-* [OpenAL](http://www.openal.org/) or [OpenAL soft](https://github.com/kcat/openal-soft)
 * [lstgx_fcylib](https://github.com/Xrysnow/lstgx_fcylib)
+* [OpenAL](http://www.openal.org/) or [OpenAL soft](https://github.com/kcat/openal-soft)
+* [libogg](https://www.xiph.org/ogg/)
+* [libvorbis](https://www.xiph.org/vorbis/)
 
 ## Features
 

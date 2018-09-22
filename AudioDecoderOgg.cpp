@@ -189,7 +189,7 @@ int AudioDecoderOgg::streamSeekFunc(void *datasource, ogg_int64_t offset, int wh
 		break;
 	default: ;
 	}
-	if (FCYFAILED(((fcyStream*)datasource)->SetPosition(tOrigin, offset)))
+	if (!((fcyStream*)datasource)->SetPosition(tOrigin, offset))
 		return -1;
 	return 0;
 }

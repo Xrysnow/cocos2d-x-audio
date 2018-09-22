@@ -228,7 +228,7 @@ bool AudioDecoderWav::seek(uint32_t frameOffset)
 	if (frameOffset >= sourceInfo.totalFrames)
 		return false;
 	//ALOGV("[AudioDecoderWav::seek] Seek %u.", frameOffset);
-	return FCYOK(stream->SetPosition(BEG, data_offset + frameOffset * sourceInfo.bytesPerFrame));
+	return stream->SetPosition(BEG, data_offset + frameOffset * sourceInfo.bytesPerFrame);
 }
 
 uint32_t AudioDecoderWav::tell() const

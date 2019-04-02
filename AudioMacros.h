@@ -14,7 +14,7 @@
 
 #define QUEUEBUFFER_NUM (3)
 //#define QUEUEBUFFER_TIME_STEP (0.1f)
-#define QUEUEBUFFER_TIME_STEP (1.f)
+#define QUEUEBUFFER_TIME_STEP (0.2f)
 
 // log, CCLOG aren't threadsafe, since we uses sub threads for parsing pcm data, threadsafe log output
 // is needed. Define the following macros (ALOGV, ALOGD, ALOGI, ALOGW, ALOGE) for threadsafe log output.

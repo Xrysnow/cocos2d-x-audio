@@ -34,6 +34,7 @@ public:
     bool setLoop(bool loop);
 
 	SourceInfo* getSourceInfo();
+	bool isStreamingSource() const { return _streamingSource; }
 
 //protected:
     void setCache(AudioCache* cache);
@@ -48,6 +49,8 @@ public:
 	void updateVelocity(bool force = false);
 
 	void getBuffer(char** buf, uint32_t* size, uint32_t* frames);
+	uint32_t copyBuffer(char* dst, uint32_t size);
+	uint32_t copyBuffer(char* dst, uint32_t size, uint32_t offset);
 protected:
     AudioCache* _audioCache;
 	SourceParam _param;
@@ -75,6 +78,8 @@ protected:
 
     unsigned int _id;
 	char* tmpBuffer = nullptr;
+	size_t tmpBufferSize = 0;
+	std::mutex tmpBufferMutex;
 	AudioDecoder* decoder = nullptr;
 private:
 	SourceParam lastParam;

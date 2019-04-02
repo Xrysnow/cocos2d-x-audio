@@ -47,9 +47,10 @@ public:
 	SourceInfo* getSourceInfo();
 
 	bool blockToReady();
-	fcyStream* getStream() { return _stream; }
-	bool isLoopAB() { return _isLoopAB; }
-	void getLoopAB(double& loopA, double& loopB) { loopA = _loopA; loopB = _loopB; }
+	fcyStream* getStream() const { return _stream; }
+	bool isLoopAB() const { return _isLoopAB; }
+	void getLoopAB(double& loopA, double& loopB) const{ loopA = _loopA; loopB = _loopB; }
+	bool isQueueBuffer() const { return _queBufferFrames != 0; }
 protected:
 	void setSkipReadDataTask(bool isSkip) { _isSkipReadDataTask = isSkip; };
 	void readDataTask(unsigned int selfId);
@@ -71,6 +72,7 @@ protected:
      */
     ALuint _alBufferId;
     char* _pcmData;
+	size_t _pcmDataSize = 0;
 
     /*Queue buffer related stuff
      *  Streaming in OpenAL when sizeInBytes greater then PCMDATA_CACHEMAXSIZE

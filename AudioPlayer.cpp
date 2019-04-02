@@ -5,6 +5,7 @@
 #include "platform/CCFileUtils.h"
 #include "AudioDecoderManager.h"
 #include "AudioDecoder.h"
+#include "../fcyLib/fcyMisc/fcyStopWatch.h"
 
 #define LOG_TAG "AudioPlayer"
 //#define VERY_VERY_VERBOSE_LOGGING
@@ -15,7 +16,7 @@
 #endif
 
 using namespace xAudio;
-fcyStopWatch AudioPlayerWatch;
+static fcyStopWatch AudioPlayerWatch;
 
 namespace {
 unsigned int __idIndex = 0;
@@ -283,6 +284,7 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
 		    break;
 	    }
 	    memset(tmpBuffer, 0, bufferSize);
+		tmpBufferSize = bufferSize;
 
         if (offsetFrame != 0) {
             decoder->seek(offsetFrame);
@@ -330,26 +332,32 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
                         }
                     }
 
-                    framesRead = decoder->readFixedFrames(framesToRead, tmpBuffer);
+					tmpBufferMutex.lock();
+					framesRead = decoder->readFixedFrames(framesToRead, tmpBuffer);
+					tmpBufferMutex.unlock();
 					ALOGVV("[AudioPlayer::rotateBufferThread] read %u B", framesRead);
 					CC_ASSERT(decoder->isABLoop() ? (framesRead == framesToRead) : true);
 
                     if (framesRead == 0) {
                         if (_param.loop) {
                             decoder->seek(0);
+							tmpBufferMutex.lock();
                             framesRead = decoder->readFixedFrames(framesToRead, tmpBuffer);
-                        } else {
+							tmpBufferMutex.unlock();
+						} else {
                             needToExitThread = true;
                             break;
                         }
                     }
 
+					tmpBufferMutex.lock();
 					// fill buffer is very fast
                     ALuint bid;
                     alSourceUnqueueBuffers(_alSource, 1, &bid);
-                    alBufferData(bid, _audioCache->_format, tmpBuffer,
+					alBufferData(bid, _audioCache->_format, tmpBuffer,
 						framesRead * decoder->getBytesPerFrame(), decoder->getSampleRate());
-                    alSourceQueueBuffers(_alSource, 1, &bid);
+					alSourceQueueBuffers(_alSource, 1, &bid);
+					tmpBufferMutex.unlock();
                 }
 				if (processed != 0){
 					ALOGVV("[AudioPlayer::rotateBufferThread] %d buffers processed in %fms.",
@@ -491,7 +499,7 @@ void AudioPlayer::updateVelocity(bool force)
 
 void AudioPlayer::getBuffer(char** buf, uint32_t* size, uint32_t* frames)
 {
-	if (tmpBuffer)
+	if (_audioCache&&tmpBuffer)
 	{
 		*buf = tmpBuffer;
 		*size = _audioCache->_queBufferFrames*decoder->getBytesPerFrame();
@@ -500,8 +508,8 @@ void AudioPlayer::getBuffer(char** buf, uint32_t* size, uint32_t* frames)
 	else if (_audioCache&&_audioCache->_pcmData)
 	{
 		*buf = _audioCache->_pcmData;
-		*size = _audioCache->_queBufferFrames*decoder->getBytesPerFrame();
-		*frames = _audioCache->_queBufferFrames;
+		*size = _audioCache->_sourceInfo.totalFrames*decoder->getBytesPerFrame();
+		*frames = _audioCache->_sourceInfo.totalFrames;
 	}
 	else
 	{
@@ -509,5 +517,36 @@ void AudioPlayer::getBuffer(char** buf, uint32_t* size, uint32_t* frames)
 		*size = 0;
 		*frames = 0;
 	}
+}
+
+uint32_t AudioPlayer::copyBuffer(char* dst, uint32_t size)
+{
+	return copyBuffer(dst, size, 0);
+}
+
+uint32_t AudioPlayer::copyBuffer(char* dst, uint32_t size, uint32_t offset)
+{
+	if (_audioCache)
+	{
+		std::lock_guard<std::mutex> lg(tmpBufferMutex);
+		if (tmpBuffer)
+		{
+			// note: important, avoid tmpBufferSize - offset underflow
+			offset = std::min(offset, tmpBufferSize);
+			size = std::min(size, tmpBufferSize - offset);
+			if (size <= 0)return 0;
+			memcpy(dst, tmpBuffer + offset, size);
+			return size;
+		}
+	}
+	if (_audioCache&&_audioCache->_pcmData)
+	{
+		offset = std::min(offset, _audioCache->_pcmDataSize);
+		size = std::min(size, _audioCache->_pcmDataSize - offset);
+		if (size <= 0)return 0;
+		memcpy(dst, _audioCache->_pcmData + offset, size);
+		return size;
+	}
+	return 0;
 }
 

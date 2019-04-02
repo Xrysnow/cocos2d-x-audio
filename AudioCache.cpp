@@ -154,6 +154,7 @@ void AudioCache::readDataTask(unsigned int selfId)
 			if (!_pcmData)
 				break;
             memset(_pcmData, 0x00, dataSize);
+			_pcmDataSize = dataSize;
 
 			// copy extra part
             if (adjustFrames > 0)

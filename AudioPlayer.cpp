@@ -33,7 +33,6 @@ _skipRemove(false),
 _currTime(0.0f),
 _streamingSource(false),
 _rotateBufferThread(nullptr),
-_timeDirty(false),
 _isRotateThreadExited(false),
 _id(++__idIndex)
 {
@@ -104,6 +103,23 @@ void AudioPlayer::destroy()
                 delete _rotateBufferThread;
                 _rotateBufferThread = nullptr;
                 ALOGV("rotateBufferThread exited!");
+
+#if CC_TARGET_PLATFORM == CC_PLATFORM_IOS
+				// some specific OpenAL implement defects existed on iOS platform
+				// refer to: https://github.com/cocos2d/cocos2d-x/issues/18597
+				ALint sourceState;
+				ALint bufferProcessed = 0;
+				alGetSourcei(_alSource, AL_SOURCE_STATE, &sourceState);
+				if (sourceState == AL_PLAYING) {
+					alGetSourcei(_alSource, AL_BUFFERS_PROCESSED, &bufferProcessed);
+					while (bufferProcessed < QUEUEBUFFER_NUM) {
+						std::this_thread::sleep_for(std::chrono::milliseconds(2));
+						alGetSourcei(_alSource, AL_BUFFERS_PROCESSED, &bufferProcessed);
+					}
+					alSourceUnqueueBuffers(_alSource, QUEUEBUFFER_NUM, _bufferIds); CHECK_AL_ERROR_DEBUG();
+				}
+				ALOGVV("UnqueueBuffers Before alSourceStop");
+#endif
             }
         }
     } while(false);
@@ -125,13 +141,14 @@ void AudioPlayer::setCache(AudioCache* cache)
 bool AudioPlayer::play2d()
 {
     _play2dMutex.lock();
-    ALOGVV("[AudioPlayer::play2d] _alSource: %u, player id=%u", _alSource, _id);
-	//ALOGV("[AudioPlayer::play2d] start at %fms", AudioPlayerWatch.GetElapsed() * 1000);
 
     /*********************************************************************/
     /*       Note that it may be in sub thread or in main thread.       **/
     /*********************************************************************/
     bool ret = false;
+	ALenum alError;
+	std::string errFunc;
+#define ERR_BREAK(_f) alError = alGetError(); if (alError != AL_NO_ERROR){ errFunc = _f; break; }
     do
     {
         if (!_audioCache || _audioCache->_state != AudioCache::State::READY)
@@ -170,47 +187,37 @@ bool AudioPlayer::play2d()
 			const uint32_t framesToRead = _audioCache->_queBufferFrames;
 			const uint32_t bufferSize = framesToRead * decoder->getBytesPerFrame();
 			if(!tmpBuffer)
-			{
 				tmpBuffer = (char*)malloc(bufferSize);
-	        }
 	        if (!tmpBuffer)
 				break;
 			memset(tmpBuffer, 0, bufferSize);
 
             alGenBuffers(3, _bufferIds);
+			ERR_BREAK("alGenBuffers");
 
-            auto alError = alGetError();
-            if (alError == AL_NO_ERROR)
-            {
-				if(_currTime > 0.0f)
-				{
-					_currTime = std::min(_currTime, (float)_audioCache->_duration);
-					auto curOffset = _currTime*decoder->getSampleRate();
-					ALOGV("[AudioPlayer::play2d] currTime=%f, offset=%d.", _currTime, curOffset);
-					if (!decoder->seek(curOffset))break;
-					// reload
-					for (int index = 0; index < QUEUEBUFFER_NUM; ++index)
-					{
-						decoder->readFixedFrames(_audioCache->_queBufferFrames, _audioCache->_queBuffers[index]);
-					}
-					offset = curOffset + _audioCache->_queBufferFrames * QUEUEBUFFER_NUM + 1;
-				} else {
-					offset = _audioCache->_queBufferFrames * QUEUEBUFFER_NUM + 1;
-				}
-				// fill
-				for (int index = 0; index < QUEUEBUFFER_NUM; ++index)
-				{
-					alBufferData(_bufferIds[index], _audioCache->_format, _audioCache->_queBuffers[index],
-						_audioCache->_queBufferSize[index], _audioCache->_sourceInfo.sampleRate);
-				}
-                CHECK_AL_ERROR_DEBUG();
-            }
-            else
-            {
-                ALOGE("%s:alGenBuffers error code:%d", __FUNCTION__,alError);
-                break;
-            }
-            _streamingSource = true;
+        	if(_currTime > 0.0f)
+	        {
+		        _currTime = std::min(_currTime, (float)_audioCache->_duration);
+		        const auto curOffset = _currTime*decoder->getSampleRate();
+		        ALOGV("[AudioPlayer::play2d] currTime=%f, offset=%d.", _currTime, curOffset);
+		        if (!decoder->seek(curOffset))break;
+		        // reload
+		        for (int index = 0; index < QUEUEBUFFER_NUM; ++index)
+		        {
+			        decoder->readFixedFrames(_audioCache->_queBufferFrames, _audioCache->_queBuffers[index]);
+		        }
+		        offset = curOffset + _audioCache->_queBufferFrames * QUEUEBUFFER_NUM + 1;
+	        } else {
+		        offset = _audioCache->_queBufferFrames * QUEUEBUFFER_NUM + 1;
+	        }
+	        // fill
+	        for (int index = 0; index < QUEUEBUFFER_NUM; ++index)
+	        {
+		        alBufferData(_bufferIds[index], _audioCache->_format, _audioCache->_queBuffers[index],
+		                     _audioCache->_queBufferSize[index], _audioCache->_sourceInfo.sampleRate);
+	        }
+	        CHECK_AL_ERROR_DEBUG();
+	        _streamingSource = true;
         }
 
         {
@@ -233,32 +240,28 @@ bool AudioPlayer::play2d()
             alSourcePlay(_alSource);
         }
 
-        auto alError = alGetError();
-        if (alError != AL_NO_ERROR)
-        {
-            ALOGE("%s:alSourcePlay error code:%d", __FUNCTION__,alError);
-            break;
-        }
+		ERR_BREAK("alSourcePlay");
 
         ALint state;
         alGetSourcei(_alSource, AL_SOURCE_STATE, &state);
-		alError = alGetError();
-		if (alError)
-		{
-			ALOGE("[AudioPlayer::play2d] OpenAL error %d\n", alError);
-			break;
-		}
-        if (state != AL_PLAYING)
+		ERR_BREAK("alGetSourcei");
+
+		// note: if device is invalid, state will not be AL_PLAYING
+		if (state != AL_PLAYING)
         {
-            ALOGE("state isn't playing, %d, %s, cache id=%u, player id=%u",
-				state, _audioCache->_fileFullPath.c_str(), _audioCache->_id, _id);
+            ALOGE("[AudioPlayer::play2d] can't play %s, device may be invalid",
+				_audioCache->_fileFullPath.c_str());
 			break;
 		}
-		// note: if device is disconnected, assert will fail
-        //assert(state == AL_PLAYING);
         _ready = true;
         ret = true;
     } while (false);
+
+	if (!errFunc.empty())
+	{
+		ALOGE("[AudioPlayer::play2d] AL error %d when call %s",
+			alError, errFunc.c_str());
+	}
 
 	_removeByAudioEngine = !ret;
 
@@ -294,8 +297,6 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
         ALint bufferProcessed = 0;
         bool needToExitThread = false;
 
-		ALOGV("[AudioPlayer::rotateBufferThread] started. offset=%d, que length=%u, buffer size=%u",
-			offsetFrame, framesToRead, bufferSize);
 		ALOGV("[AudioPlayer::rotateBufferThread] started at %fms", AudioPlayerWatch.GetElapsed() * 1000);
 		fcyStopWatch sw;
 
@@ -304,38 +305,30 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
 	        auto __error = alGetError();
 			if (__error)
 			{
-				ALOGE("[AudioPlayer::rotateBufferThread] OpenAL error %d, exit.\n", __error);
+				ALOGE("[AudioPlayer::rotateBufferThread] OpenAL error %d, exit.", __error);
 				needToExitThread = true;
 			}
             if (sourceState == AL_PLAYING) {
                 alGetSourcei(_alSource, AL_BUFFERS_PROCESSED, &bufferProcessed);
 				CHECK_AL_ERROR_DEBUG();
-				auto processed = bufferProcessed; sw.Reset();
+				auto processed = bufferProcessed;
+            	sw.Reset();
                 while (bufferProcessed > 0) {
+					std::lock_guard<std::mutex> _lk(_processMutex);
                     bufferProcessed--;
-      //              if (_timeDirty) {
-      //                  _timeDirty = false;
-      //                  offsetFrame = _currTime * decoder->getSampleRate();
-						//ALOGV("[AudioPlayer::rotateBufferThread] Set time to %f.", _currTime);
-	     //               if (!decoder->seek(offsetFrame))
-		    //                decoder->seek(0);
-      //              }
-      //              else
-					{
-                        _currTime += QUEUEBUFFER_TIME_STEP;
-                        if (_currTime > _audioCache->_duration) {
-							if (_param.loop) {
-                                _currTime = 0.0f;
-                            } else {
-                                _currTime = _audioCache->_duration;
-                            }
-                        }
-                    }
+	                _currTime += QUEUEBUFFER_TIME_STEP;
+	                if (_currTime > _audioCache->_duration) {
+		                if (_param.loop) {
+			                _currTime = 0.0f;
+		                } else {
+			                _currTime = _audioCache->_duration;
+		                }
+	                }
 
-					tmpBufferMutex.lock();
+	                tmpBufferMutex.lock();
 					framesRead = decoder->readFixedFrames(framesToRead, tmpBuffer);
 					tmpBufferMutex.unlock();
-					ALOGVV("[AudioPlayer::rotateBufferThread] read %u B", framesRead);
+					ALOGVV("[AudioPlayer::rotateBufferThread] read %u frames", framesRead);
 					CC_ASSERT(decoder->isABLoop() ? (framesRead == framesToRead) : true);
 
                     if (framesRead == 0) {
@@ -375,12 +368,8 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
 
     } while(false);
 
-    //ALOGV("_isDestroyed=%b", _isDestroyed);
-    //ALOGV("Exit rotate buffer thread ...");
-
     _isRotateThreadExited = true;
-	ALOGV("[AudioPlayer::rotateBufferThread] exite at %fms", AudioPlayerWatch.GetElapsed() * 1000);
-    ALOGV("[AudioPlayer::rotateBufferThread] exited.\n");
+	ALOGV("[AudioPlayer::rotateBufferThread] exit at %fms.\n", AudioPlayerWatch.GetElapsed() * 1000);
 }
 
 bool AudioPlayer::setLoop(bool loop)
@@ -395,52 +384,84 @@ bool AudioPlayer::setLoop(bool loop)
 
 bool AudioPlayer::setTime(float time)
 {
-	// not accurate, need an improvement
-    if (!_isDestroyed && time >= 0.0f && time < _audioCache->_duration) {
-
-		//ALOGV("[AudioPlayer::setTime] start at %fms", AudioPlayerWatch.GetElapsed() * 1000);
+    if (!_isDestroyed && time >= 0.0f && time < _audioCache->_duration)
+	{
+		std::lock_guard<std::mutex> _lk(_processMutex);
 		_currTime = time;
-        _timeDirty = true;
 		fcyStopWatch sw;
 		//TODO: check this
 	    if (_ready)
 	    {
-			ALenum __error;
+			ALenum alError = 0;
+			std::string errFunc;
+			do
+		    {
+			    if (_streamingSource)
+			    {
+					ALint state;
+					alGetSourcei(_alSource, AL_SOURCE_STATE, &state);
+					ERR_BREAK("alGetSourcei AL_SOURCE_STATE");
+				    alSourcef(_alSource, AL_SEC_OFFSET, 0.f);
+					ERR_BREAK("alSourcef AL_SEC_OFFSET");
+					// source must be stopped before detach buffer
+					if (state != AL_STOPPED)
+					{
+						alSourceStop(_alSource);
+						ERR_BREAK("alSourcePause");
+				    }
+					// detach
+					alSourcei(_alSource, AL_BUFFER, 0);
+					ERR_BREAK("alSourcei AL_BUFFER");
+					const auto curOffset = _currTime * decoder->getSampleRate();
+					if (!decoder->seek(curOffset))
+						return false;
+					// reload
+					for (int index = 0; index < QUEUEBUFFER_NUM; ++index)
+					{
+						decoder->readFixedFrames(_audioCache->_queBufferFrames, _audioCache->_queBuffers[index]);
+					}
+					// fill
+					for (int index = 0; index < QUEUEBUFFER_NUM; ++index)
+					{
+						alBufferData(_bufferIds[index], _audioCache->_format, _audioCache->_queBuffers[index],
+							_audioCache->_queBufferSize[index], _audioCache->_sourceInfo.sampleRate);
+						ERR_BREAK("alBufferData");
+					}
+					// attach
+					alSourceQueueBuffers(_alSource, QUEUEBUFFER_NUM, _bufferIds);
+					ERR_BREAK("alSourceQueueBuffers");
+					if (state == AL_PLAYING)
+					{
+						alSourcePlay(_alSource);
+						ERR_BREAK("alSourcePlay");
+				    }
+			    }
+			    else
+			    {
+					alSourcef(_alSource, AL_SEC_OFFSET, time);
+			    }
+		    }
+		    while (false);
 
-			_skipRemove = true;
-			alSourceStop(_alSource);
-			_sleepCondition.notify_one();
-			destroy();
-			ALint bufferInQueue = 0;
-			alGetSourcei(_alSource, AL_BUFFERS_QUEUED, &bufferInQueue);
-			//ALOGV("[AudioPlayer::setTime] buffer in queue: %d", bufferInQueue);
-			for (int i = 0; i < bufferInQueue; ++i)
-			{
-				ALuint bid;
-				alSourceUnqueueBuffers(_alSource, 1, &bid);				
+			if (!errFunc.empty()) {
+				ALOGE("[AudioPlayer::setTime] last error %d at %s", alError, errFunc.c_str());
 			}
-
-			alDeleteBuffers(3, _bufferIds);
-			//memset(_bufferIds, 0, sizeof(_bufferIds));
-			_removeByAudioEngine = false;
-		    _isDestroyed = false;
-			play2d();
-
-			//alGetSourcei(_alSource, AL_BUFFERS_QUEUED, &bufferInQueue);
-			//ALOGV("[AudioPlayer::setTime] buffer in queue: %d", bufferInQueue);
-
-			__error = alGetError();
-			if (__error) {
-				ALOGE("[AudioPlayer::setTime] last error %d", __error);
-			}
-
-			_skipRemove = false;
 	    }
 		ALOGV("[AudioPlayer::setTime] cost %fms", sw.GetElapsed() * 1000);
-
         return true;
     }
     return false;
+}
+
+float AudioPlayer::getTime()
+{
+	if (!_ready)
+		return _currTime;
+	std::lock_guard<std::mutex> _lk(_processMutex);
+	ALfloat offset;
+	// The offset is relative to the start of the queue (not the start of the current buffer)
+	alGetSourcef(_alSource, AL_SEC_OFFSET, &offset);
+	return _currTime + offset;
 }
 
 SourceInfo* AudioPlayer::getSourceInfo()

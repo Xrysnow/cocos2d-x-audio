@@ -23,23 +23,19 @@ public:
 
     void destroy();
 
-    //queue buffer related stuff
-
-	// Not accurate, precision is QUEUEBUFFER_TIME_STEP.
-	// No effect if not use queue buffers.
     bool setTime(float time);
-	// Not accurate, precision is QUEUEBUFFER_TIME_STEP.
-	// No effect if not use queue buffers.
-    float getTime() { return _currTime;}
+	// Not accurate, precision depends on OpenAL
+	float getTime();
     bool setLoop(bool loop);
 
 	SourceInfo* getSourceInfo();
 	bool isStreamingSource() const { return _streamingSource; }
 
-//protected:
     void setCache(AudioCache* cache);
 	AudioCache* getCache() { return _audioCache; }
+protected:
     void rotateBufferThread(int offsetFrame);
+public:
 	// Will be called only once since AudioEngine::play2d always creates a new AudioPlayer
     bool play2d();
 	void updateParam(bool force = false);
@@ -63,15 +59,13 @@ protected:
     bool _removeByAudioEngine;
 	bool _skipRemove;
 
-    //play by circular buffer
-
     float _currTime;
     bool _streamingSource;
     ALuint _bufferIds[3];
     std::thread* _rotateBufferThread;
     std::condition_variable _sleepCondition;
     std::mutex _sleepMutex;
-    bool _timeDirty;
+    std::mutex _processMutex;
     bool _isRotateThreadExited;
 
     std::mutex _play2dMutex;

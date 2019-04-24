@@ -23,7 +23,7 @@ bool AudioDecoder::open(fcyStream* stream, double loopA, double loopB)
 
 bool AudioDecoder::isOpened() const
 {
-    return _isOpened;
+	return _isOpened;
 }
 
 uint32_t AudioDecoder::read_loop(uint32_t framesToRead, char* pcmBuf)
@@ -83,41 +83,41 @@ uint32_t AudioDecoder::read_loop(uint32_t framesToRead, char* pcmBuf)
 
 uint32_t AudioDecoder::readFixedFrames(uint32_t framesToRead, char* pcmBuf)
 {
-    uint32_t framesRead = 0;
-    uint32_t framesReadOnce = 0;
-    do
-    {
-        framesReadOnce = read(framesToRead - framesRead, pcmBuf + framesRead * sourceInfo.bytesPerFrame);
-        framesRead += framesReadOnce;
-    } while (framesReadOnce != 0 && framesRead < framesToRead);
+	uint32_t framesRead = 0;
+	uint32_t framesReadOnce = 0;
+	do
+	{
+		framesReadOnce = read(framesToRead - framesRead, pcmBuf + framesRead * sourceInfo.bytesPerFrame);
+		framesRead += framesReadOnce;
+	} while (framesReadOnce != 0 && framesRead < framesToRead);
 
-    if (framesRead < framesToRead)
-    {
+	if (framesRead < framesToRead)
+	{
 		ALOGV("[AudioDecoder::readFixedFrames] Not enough frames, fill %d more with 0.", framesToRead - framesRead);
-        memset(pcmBuf + framesRead * sourceInfo.bytesPerFrame, 0x00, (framesToRead - framesRead) * sourceInfo.bytesPerFrame);
-    }
+		memset(pcmBuf + framesRead * sourceInfo.bytesPerFrame, 0x00, (framesToRead - framesRead) * sourceInfo.bytesPerFrame);
+	}
 
-    return framesRead;
+	return framesRead;
 }
 
 uint32_t AudioDecoder::getTotalFrames() const
 {
-    return sourceInfo.totalFrames;
+	return sourceInfo.totalFrames;
 }
 
 uint32_t AudioDecoder::getBytesPerFrame() const
 {
-    return sourceInfo.bytesPerFrame;
+	return sourceInfo.bytesPerFrame;
 }
 
 uint32_t AudioDecoder::getSampleRate() const
 {
-    return sourceInfo.sampleRate;
+	return sourceInfo.sampleRate;
 }
 
 uint32_t AudioDecoder::getChannelCount() const
 {
-    return sourceInfo.channelCount;
+	return sourceInfo.channelCount;
 }
 
 uint32_t AudioDecoder::fixLength(std::vector<uint8_t>* buffer)

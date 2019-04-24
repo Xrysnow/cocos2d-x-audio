@@ -444,10 +444,10 @@ void AudioEngineImpl::uncacheAll()
 {
 	_audioCaches.clear();
 	for(auto&& player : _audioPlayers)
-    {
-        // prevent player hold invalid AudioCache* pointer, since all audio caches purged
-        player.second->setCache(nullptr);
-    }
+	{
+		// prevent player hold invalid AudioCache* pointer, since all audio caches purged
+		player.second->setCache(nullptr);
+	}
 }
 
 void AudioEngineImpl::update(float dt)

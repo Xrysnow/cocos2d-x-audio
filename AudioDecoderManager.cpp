@@ -11,21 +11,21 @@ using namespace xAudio;
 
 bool AudioDecoderManager::init()
 {
-    return true;
+	return true;
 }
 
 void AudioDecoderManager::destroy()
 {
-    //AudioDecoderMp3::destroy();
+	//AudioDecoderMp3::destroy();
 }
 
 AudioDecoder* AudioDecoderManager::createDecoder(const char* path)
 {
-    std::string suffix = cocos2d::FileUtils::getInstance()->getFileExtension(path);
-    if (suffix == ".ogg")
-    {
-        return new (std::nothrow) AudioDecoderOgg();
-    }
+	std::string suffix = cocos2d::FileUtils::getInstance()->getFileExtension(path);
+	if (suffix == ".ogg")
+	{
+		return new (std::nothrow) AudioDecoderOgg();
+	}
 	if (suffix == ".wav")
 	{
 		return new (std::nothrow) AudioDecoderWav();

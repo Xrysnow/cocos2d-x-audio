@@ -5,7 +5,6 @@
 #include "platform/CCFileUtils.h"
 #include "AudioDecoderManager.h"
 #include "AudioDecoder.h"
-#include "../fcyLib/fcyMisc/fcyStopWatch.h"
 
 #define LOG_TAG "AudioPlayer"
 //#define VERY_VERY_VERBOSE_LOGGING
@@ -16,7 +15,30 @@
 #endif
 
 using namespace xAudio;
-static fcyStopWatch AudioPlayerWatch;
+
+class _StopWatch
+{
+	using ns = std::chrono::nanoseconds;
+	using clock = std::chrono::high_resolution_clock;
+	uint64_t last = 0;
+	double factor = 0;
+public:
+	_StopWatch() {
+		auto _t = clock::now();
+		const double _t1 = _t.time_since_epoch().count();
+		const double _t2 = std::chrono::time_point_cast<ns>(_t).time_since_epoch().count();
+		factor = double(ns::period::num) / ns::period::den * (double(_t2) / _t1);
+		reset();
+	}
+	void reset() {
+		last = (uint64_t)clock::now().time_since_epoch().count();
+	}
+	double getElapsed() {
+		return double((uint64_t)clock::now().time_since_epoch().count() - last)*factor;
+	}
+};
+
+static _StopWatch AudioPlayerWatch;
 
 namespace {
 unsigned int __idIndex = 0;
@@ -291,8 +313,8 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
 		ALint bufferProcessed = 0;
 		bool needToExitThread = false;
 
-		ALOGV("[AudioPlayer::rotateBufferThread] started at %fms", AudioPlayerWatch.GetElapsed() * 1000);
-		fcyStopWatch sw;
+		ALOGV("[AudioPlayer::rotateBufferThread] started at %fms", AudioPlayerWatch.getElapsed() * 1000);
+		_StopWatch sw;
 
 		while (!_isDestroyed) {
 			alGetSourcei(_alSource, AL_SOURCE_STATE, &sourceState);
@@ -306,7 +328,7 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
 				alGetSourcei(_alSource, AL_BUFFERS_PROCESSED, &bufferProcessed);
 				CHECK_AL_ERROR_DEBUG();
 				auto processed = bufferProcessed;
-				sw.Reset();
+				sw.reset();
 				while (bufferProcessed > 0) {
 					std::lock_guard<std::mutex> _lk(_processMutex);
 					bufferProcessed--;
@@ -347,7 +369,7 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
 				}
 				if (processed != 0){
 					ALOGVV("[AudioPlayer::rotateBufferThread] %d buffers processed in %fms.",
-						processed, sw.GetElapsed() * 1000); sw.Reset();
+						processed, sw.getElapsed() * 1000); sw.reset();
 				}
 			}
 
@@ -362,7 +384,7 @@ void AudioPlayer::rotateBufferThread(int offsetFrame)
 	} while(false);
 
 	_isRotateThreadExited = true;
-	ALOGV("[AudioPlayer::rotateBufferThread] exit at %fms.\n", AudioPlayerWatch.GetElapsed() * 1000);
+	ALOGV("[AudioPlayer::rotateBufferThread] exit at %fms.\n", AudioPlayerWatch.getElapsed() * 1000);
 }
 
 bool AudioPlayer::setLoop(bool loop)

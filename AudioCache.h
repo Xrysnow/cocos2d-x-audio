@@ -3,13 +3,13 @@
 #include "platform/CCPlatformConfig.h"
 
 #include "AudioMacros.h"
-#include "../fcyLib/fcyStream.h"
 #include "AudioParam.h"
 #include AL_HEADER
 #include <string>
 #include <mutex>
 #include <vector>
 #include <memory>
+#include "AudioStream.h"
 
 namespace xAudio{
 
@@ -47,12 +47,12 @@ public:
 	SourceInfo* getSourceInfo();
 
 	bool blockToReady();
-	fcyStream* getStream() const { return _stream; }
+	AudioStream* getStream() const { return _stream; }
 	bool isLoopAB() const { return _isLoopAB; }
 	void getLoopAB(double& loopA, double& loopB) const{ loopA = _loopA; loopB = _loopB; }
 	bool isQueueBuffer() const { return _queBufferFrames != 0; }
 protected:
-	void setSkipReadDataTask(bool isSkip) { _isSkipReadDataTask = isSkip; };
+	void setSkipReadDataTask(bool isSkip) { _isSkipReadDataTask = isSkip; }
 	void readDataTask(unsigned int selfId);
 
 	void invokingPlayCallbacks();
@@ -100,7 +100,7 @@ protected:
 	// set external:
 
     std::string _fileFullPath;
-	fcyStream* _stream;
+	AudioStream* _stream;
 	double _loopA;
 	double _loopB;
 	// Force decode all data in 'readDataTask', this will disable AB loop.

@@ -2,6 +2,7 @@
 #include "audio/include/AudioEngine.h"
 #include "AudioParam.h"
 #include "AudioEngineImpl.h"
+#include "AudioStream.h"
 #include "base/CCData.h"
 #ifdef ERROR
 #undef ERROR
@@ -59,11 +60,11 @@ namespace xAudio
 		static void preload(const std::string& filePath,
 			std::function<void(bool isSuccess)> callback);
 		static bool preload(const std::string& filePath,
-			fcyStream* stream,
+			AudioStream* stream,
 			std::function<void(bool isSuccess)> callback,
 			AudioCache** cache = nullptr);
 		static bool preload(const std::string& filePath,
-			fcyStream* stream,
+			AudioStream* stream,
 			double loopA,
 			double loopB,
 		    const std::function<void(bool isSuccess)>& callback,

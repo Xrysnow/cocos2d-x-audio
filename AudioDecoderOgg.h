@@ -33,8 +33,7 @@ namespace xAudio {
 	class AudioDecoderOgg : public AudioDecoder
 	{
 	public:
-		bool open(const char* path) override;
-		bool open(fcyStream* stream, double loopA = 0, double loopB = -1) override;
+		bool open(AudioStream* src, double loopA = 0, double loopB = -1) override;
 		void close() override;
 		uint32_t read(uint32_t framesToRead, char* pcmBuf) override;
 		bool seek(uint32_t frameOffset) override;

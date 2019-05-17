@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 #include "platform/CCPlatformDefine.h"
-#include "../fcyLib/fcyStream.h"
 #include "AudioParam.h"
+#include "AudioStream.h"
 
 namespace xAudio {
 
@@ -16,12 +16,10 @@ public:
     static const uint32_t INVALID_FRAME_INDEX = UINT32_MAX;
 
     /**
-     * @brief Opens an audio file specified by a file path.
+     * @brief Opens an audio stream.
      * @return true if succeed, otherwise false.
      */
-    virtual bool open(const char* path) = 0;
-
-	virtual bool open(fcyStream* stream, double loopA = 0, double loopB = -1);
+	virtual bool open(AudioStream* src, double loopA = 0, double loopB = -1);
 
     /**
      * @brief Checks whether decoder has opened file successfully.
@@ -103,7 +101,7 @@ protected:
     bool _isABLoop = false;
 	SourceInfo sourceInfo;
 
-	fcyStream* stream = nullptr;
+	AudioStream* stream = nullptr;
 	uint32_t loopA = 0;
 	uint32_t loopB = 0;
 

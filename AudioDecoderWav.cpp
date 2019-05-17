@@ -18,35 +18,23 @@ const uint32_t CKC_fact = GenerateChunkCode('f', 'a', 'c', 't');
 const uint32_t CKC_bext = GenerateChunkCode('b', 'e', 'x', 't');
 const uint32_t CKC_data = GenerateChunkCode('d', 'a', 't', 'a');
 
-bool AudioDecoderWav::open(const char* path)
-{
-	if (_isOpened)
-		return false;
-	auto fullPath = cocos2d::FileUtils::getInstance()->fullPathForFilename(path);
-	auto src = fcyFileStream::create(fullPath, false);
-	if (!src) return false;
-	auto ret = open(src);
-	src->release();
-	return ret;
-}
-
-bool AudioDecoderWav::open(fcyStream* src, double loopA, double loopB)
+bool AudioDecoderWav::open(AudioStream* src, double loopA, double loopB)
 {
 	if (_isOpened || !src)
 		return false;
 	stream = src;
-	string msg = "";
+	string msg;
 	uint8_t* tempBuffer = nullptr;
 	bool ret = false;
-	stream->Lock();
+	stream->lock();
 	do
 	{
-		stream->SetPosition(BEG, 0);
-		auto size = stream->GetLength();
+		stream->seek(AudioStream::SeekOrigin::BEGINNING, 0);
+		auto size = stream->size();
 
 		// Read RIFF Header
 		RiffChunkHeader riffHeader = {};
-		stream->ReadBytes((uint8_t*)&riffHeader, 12);
+		stream->read((uint8_t*)&riffHeader, 12);
 		// Check RIFF
 		if (riffHeader.id_riff != CKC_RIFF){
 			if (riffHeader.id_riff == CKC_RIFX || riffHeader.id_riff == CKC_FFIR){
@@ -65,8 +53,8 @@ bool AudioDecoderWav::open(fcyStream* src, double loopA, double loopB)
 		// note: assume that header is smaller than 256B
 		tempBuffer = (uint8_t*)malloc(256);
 		uint64_t bufferLength;
-		stream->SetPosition(BEG, 0);
-		stream->ReadBytes(tempBuffer, 256, &bufferLength);
+		stream->seek(AudioStream::SeekOrigin::BEGINNING, 0);
+		stream->read(tempBuffer, 256, &bufferLength);
 
 		// Read WAVE Header
 		auto WaveChunkInfo = ScanForChunk(tempBuffer, bufferLength, CKC_fmt_);
@@ -147,29 +135,29 @@ bool AudioDecoderWav::open(fcyStream* src, double loopA, double loopB)
 		// Read DATA Chunk
 		auto DataChunkInfo = ScanForChunk(tempBuffer, bufferLength, CKC_data);
 		if (DataChunkInfo.offset == 0) {
-			msg = "couldn't find data chunk |size=" + to_string(stream->GetLength()) +
+			msg = "couldn't find data chunk |size=" + to_string(stream->size()) +
 				"|temp buf size=" + to_string(bufferLength); break;
 		}
 		uint32_t data_size;
 		memcpy(&data_size, tempBuffer + DataChunkInfo.offset + sizeof(uint32_t), sizeof(uint32_t));
 		data_offset = DataChunkInfo.offset + 2 * sizeof(uint32_t);// skip the header and size fields
 		// note: there may be some info at file tail, only use data_size
-		if (data_size != stream->GetLength() - data_offset)
+		if (data_size != stream->size() - data_offset)
 		{
 			msg = "data size mismatch. expect " + to_string(data_size) +
-				", got " + to_string(stream->GetLength() - data_offset);
-			data_size = min(data_size, uint32_t(stream->GetLength() - data_offset));
+				", got " + to_string(stream->size() - data_offset);
+			data_size = min(data_size, uint32_t(stream->size() - data_offset));
 		}
 		//if (adpcmEncoded){}
 		sourceInfo.totalFrames = data_size / wavHeader.frame_size;
-		stream->SetPosition(BEG, data_offset);
+		stream->seek(AudioStream::SeekOrigin::BEGINNING, data_offset);
 		stream->retain();
 		calcLoopAB(loopA, loopB);
 		_isOpened = true;
 		ret = true;
 	}
 	while (false);
-	stream->Unlock();
+	stream->unlock();
 	if (tempBuffer)free(tempBuffer);
 	if (!msg.empty())
 	{
@@ -185,7 +173,7 @@ void AudioDecoderWav::close()
 		_isOpened = false;
 		if (stream)
 		{
-			stream->SetPosition(BEG, 0);
+			stream->seek(AudioStream::SeekOrigin::BEGINNING, 0);
 			stream->release();
 			stream = nullptr;
 		}
@@ -202,21 +190,21 @@ uint32_t AudioDecoderWav::read(uint32_t framesToRead, char* pcmBuf)
 	}
 	else if (stream)
 	{
-		stream->Lock(); // 锁定流
+		stream->lock(); // 锁定流
 
 		uint32_t tSizeRead = 0;
 		auto tBuffer = (uint8_t*)pcmBuf;
 		while (tSizeRead < bytesToRead)
 		{
 			uint64_t tRet;
-			stream->ReadBytes(tBuffer, bytesToRead - tSizeRead, &tRet);
+			stream->read(tBuffer, bytesToRead - tSizeRead, &tRet);
 			if (tRet == 0)  // 到尾部
 				break;
 			tSizeRead += tRet;
 			tBuffer += tRet;
 		}
 
-		stream->Unlock();
+		stream->unlock();
 		ret = tSizeRead / sourceInfo.bytesPerFrame;
 	}
 
@@ -228,12 +216,12 @@ bool AudioDecoderWav::seek(uint32_t frameOffset)
 	if (frameOffset >= sourceInfo.totalFrames)
 		return false;
 	//ALOGV("[AudioDecoderWav::seek] Seek %u.", frameOffset);
-	return stream->SetPosition(BEG, data_offset + frameOffset * sourceInfo.bytesPerFrame);
+	return stream->seek(AudioStream::SeekOrigin::BEGINNING, data_offset + frameOffset * sourceInfo.bytesPerFrame);
 }
 
 uint32_t AudioDecoderWav::tell() const
 {
-	int32_t p = stream->GetPosition() - data_offset;
+	int32_t p = stream->tell() - data_offset;
 	return max(0, p) / sourceInfo.bytesPerFrame;
 }
 

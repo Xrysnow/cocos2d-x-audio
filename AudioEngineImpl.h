@@ -10,7 +10,6 @@
 
 namespace xAudio
 {
-
 	class AudioEngineImpl : public cocos2d::Ref
 	{
 	public:
@@ -19,9 +18,9 @@ namespace xAudio
 
 		bool init();
 		AudioCache* preload(const std::string& filePath,
-			fcyStream* stream = nullptr, std::function<void(bool)> callback = nullptr);
+			AudioStream* stream = nullptr, std::function<void(bool)> callback = nullptr);
 		AudioCache* preload(const std::string& filePath,
-			fcyStream* stream, double loopA, double loopB, std::function<void(bool)> callback = nullptr);
+			AudioStream* stream, double loopA, double loopB, std::function<void(bool)> callback = nullptr);
 		int play2d(const std::string &fileFullPath, SourceParam* param = nullptr, bool sync = false);
 		void setVolume(int audioID, float volume);
 		void setLoop(int audioID, bool loop);

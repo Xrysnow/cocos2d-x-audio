@@ -111,7 +111,7 @@ void AudioCache::readDataTask(unsigned int selfId)
 	do
 	{
 		if (decoder == nullptr ||
-			(_stream ? !decoder->open(_stream, _loopA, _loopB) : !decoder->open(_fileFullPath.c_str())))
+			!decoder->open(_stream, _loopA, _loopB))
 			break;
 		_isLoopAB = decoder->isABLoop();
 

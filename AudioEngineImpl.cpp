@@ -81,13 +81,13 @@ bool AudioEngineImpl::init()
 	return ret;
 }
 
-AudioCache* AudioEngineImpl::preload(const std::string& filePath, fcyStream* stream,
+AudioCache* AudioEngineImpl::preload(const std::string& filePath, AudioStream* stream,
 	std::function<void(bool)> callback)
 {
 	return preload(filePath, stream, 0.0, -1.0, callback);
 }
 
-AudioCache* AudioEngineImpl::preload(const std::string& filePath, fcyStream* stream,
+AudioCache* AudioEngineImpl::preload(const std::string& filePath, AudioStream* stream,
 	double loopA, double loopB, std::function<void(bool)> callback)
 {
 	AudioCache* audioCache = nullptr;

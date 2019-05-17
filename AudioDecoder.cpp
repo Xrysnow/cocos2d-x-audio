@@ -16,7 +16,7 @@ AudioDecoder::~AudioDecoder()
 }
 
 
-bool AudioDecoder::open(fcyStream* stream, double loopA, double loopB)
+bool AudioDecoder::open(AudioStream* src, double loopA, double loopB)
 {
 	return false;
 }

@@ -522,13 +522,13 @@ void AudioEngine::preload(const string& filePath, function<void(bool isSuccess)>
 	preload(filePath, nullptr, callback, nullptr);
 }
 
-bool AudioEngine::preload(const string& filePath, fcyStream* stream
+bool AudioEngine::preload(const string& filePath, AudioStream* stream
 	, function<void(bool isSuccess)> callback, AudioCache** cache)
 {
 	return preload(filePath, stream, 0.0, -1.0, callback, cache);
 }
 
-bool AudioEngine::preload(const string& filePath, fcyStream* stream, double loopA, double loopB,
+bool AudioEngine::preload(const string& filePath, AudioStream* stream, double loopA, double loopB,
 	const function<void(bool isSuccess)>& callback, AudioCache** cache)
 {
 	if (!isEnabled())

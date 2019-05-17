@@ -175,9 +175,8 @@ bool AudioPlayer::play2d()
 				break;
 			if (!decoder->isOpened())
 			{
-				if (_audioCache->_stream ?
-					!decoder->open(_audioCache->_stream, _audioCache->_loopA, _audioCache->_loopB) :
-					!decoder->open(_audioCache->_fileFullPath.c_str()))
+				if (!_audioCache->_stream ||
+					!decoder->open(_audioCache->_stream, _audioCache->_loopA, _audioCache->_loopB))
 					break;
 			}
 			const uint32_t framesToRead = _audioCache->_queBufferFrames;

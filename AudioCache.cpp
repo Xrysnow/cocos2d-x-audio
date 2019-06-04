@@ -96,6 +96,7 @@ AudioCache::~AudioCache()
 		for (int index = 0; index < QUEUEBUFFER_NUM; ++index)
 			free(_queBuffers[index]);
 	}
+	CC_SAFE_RELEASE_NULL(_stream);
 	ALOGVV("~AudioCache() %p, id=%u, end", this, _id);
 }
 
@@ -334,6 +335,13 @@ void AudioCache::invokingLoadCallbacks()
 
 		_loadCallbacks.clear();
 	});
+}
+
+void AudioCache::setStream(AudioStream* stream)
+{
+	CC_SAFE_RELEASE_NULL(_stream);
+	_stream = stream;
+	CC_SAFE_RETAIN(_stream);
 }
 
 ALenum AudioCache::getFormat() const

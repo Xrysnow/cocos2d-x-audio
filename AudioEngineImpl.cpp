@@ -99,7 +99,7 @@ AudioCache* AudioEngineImpl::preload(const std::string& filePath, AudioStream* s
 		if (stream)
 		{
 			audioCache->_fileFullPath = filePath;
-			audioCache->_stream = stream;
+			audioCache->setStream(stream);
 			audioCache->_loopA = loopA;
 			audioCache->_loopB = loopB;
 		}

@@ -59,6 +59,8 @@ protected:
 
 	void invokingLoadCallbacks();
 
+	void setStream(AudioStream* stream);
+
 	//pcm data related stuff
 
 	ALenum _format;         //format of _pcmData, AL_FORMAT_MONO16 or AL_FORMAT_STEREO16

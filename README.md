@@ -8,7 +8,6 @@ This project uses codes from following projects:
 
 ## Dependency
 
-* [lstgx_fcylib](https://github.com/Xrysnow/lstgx_fcylib)
 * [OpenAL](http://www.openal.org/) or [OpenAL soft](https://github.com/kcat/openal-soft)
 * [libogg](https://www.xiph.org/ogg/)
 * [libvorbis](https://www.xiph.org/vorbis/)
@@ -18,4 +17,4 @@ This project uses codes from following projects:
 * Supports play, stop, resume of audio.
 * Supports A-B loop play.
 * Supports 3D sound effect.
-* Will be cross platform if use [OpenAL soft](https://github.com/kcat/openal-soft) as dependency.
+* Multi-platform.

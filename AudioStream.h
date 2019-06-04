@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "base/CCRef.h"
 #include <mutex>
+#include <algorithm>
 
 namespace xAudio
 {

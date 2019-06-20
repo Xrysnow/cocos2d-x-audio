@@ -575,8 +575,8 @@ uint32_t AudioPlayer::copyBuffer(char* dst, uint32_t size, uint32_t offset)
 	}
 	if (_audioCache&&_audioCache->_pcmData)
 	{
-		offset = std::min(offset, _audioCache->_pcmDataSize);
-		size = std::min(size, _audioCache->_pcmDataSize - offset);
+		offset = std::min(offset, (uint32_t)_audioCache->_pcmDataSize);
+		size = std::min(size, (uint32_t)_audioCache->_pcmDataSize - offset);
 		if (size <= 0)return 0;
 		memcpy(dst, _audioCache->_pcmData + offset, size);
 		return size;

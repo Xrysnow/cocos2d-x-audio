@@ -72,7 +72,7 @@ protected:
 
     unsigned int _id;
 	char* tmpBuffer = nullptr;
-	size_t tmpBufferSize = 0;
+	uint32_t tmpBufferSize = 0;
 	std::mutex tmpBufferMutex;
 	AudioDecoder* decoder = nullptr;
 private:

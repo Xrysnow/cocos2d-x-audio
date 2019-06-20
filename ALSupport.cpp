@@ -138,16 +138,33 @@ vector<string> SplitAlString(const char* str)
 
 void GetDeviceNames()
 {
+	if (!_has_ALC_ENUMERATE_ALL_EXT)
+	{
+		ALOGI("ALC_ENUMERATE_ALL_EXT is not supported");
+		return;
+	}
 	const ALCchar *defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
-	// defaultDeviceName contains the name of the default device
-	DefaultDeviceName = string(defaultDeviceName);
-
-	if (!_has_ALC_ENUMERATE_ALL_EXT)return;
+	if (!defaultDeviceName)
+	{
+		ALOGI("Cannot get default device name");
+	}
+	else
+	{
+		// defaultDeviceName contains the name of the default device
+		DefaultDeviceName = string(defaultDeviceName);
+	}
 	// Pass in NULL device handle to get list of *all* devices 
 	const ALCchar *devices = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
-	// devices contains *all* the device names, separated by NULL  
-	// and terminated by two consecutive NULLs. 
-	DeviceNames = SplitAlString(devices);
+	if (!devices)
+	{
+		ALOGI("Cannot get devices");
+	}
+	else
+	{
+		// devices contains *all* the device names, separated by NULL  
+		// and terminated by two consecutive NULLs. 
+		DeviceNames = SplitAlString(devices);
+	}
 }
 
 void GetCaptureDeviceNames()

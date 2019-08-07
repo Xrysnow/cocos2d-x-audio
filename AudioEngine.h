@@ -3,15 +3,14 @@
 #include "AudioSource.h"
 #include "AudioEffect.h"
 #include "AudioPool.h"
-
-#include "ALHeader.h"
-#include "AudioRecordingDevice.h"
 #include "AudioDecoder.h"
-
-#include <map>
+#include "AudioRecordingDevice.h"
+#include "ALHeader.h"
 #include <vector>
 #include <stack>
-#include <cmath>
+#include <array>
+#include <string>
+#include <map>
 
 namespace audio
 {
@@ -50,10 +49,6 @@ namespace audio
 		 * @return One of AL_FORMAT_*, or AL_NONE if unsupported format.
 		 **/
 		static ALenum getFormat(int bitDepth, int channels);
-
-		//Source *newSource(Decoder *decoder);
-		//Source *newSource(SoundData *soundData);
-		//Source *newSource(int sampleRate, int bitDepth, int channels, int buffers);
 
 		/**
 		 * Gets the current number of simultaneous playing sources.

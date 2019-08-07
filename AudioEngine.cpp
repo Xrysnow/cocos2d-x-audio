@@ -59,7 +59,6 @@ Engine::Engine()
 	: device(nullptr)
 	, context(nullptr)
 	, pool(nullptr)
-	//, poolThread(nullptr)
 	, distanceModel(DistanceModel::INVERSE_CLAMPED)
 {
 }
@@ -107,21 +106,6 @@ ALenum Engine::getFormat(int bitDepth, int channels)
 #endif
 	return AL_NONE;
 }
-
-//Source *Engine::newSource(Decoder *decoder)
-//{
-//	return pool ? Source::createFromDecoder(decoder) : nullptr;
-//}
-//
-//Source *Engine::newSource(SoundData *soundData)
-//{
-//	return pool ? Source::createFromSoundData(soundData) : nullptr;
-//}
-//
-//Source *Engine::newSource(int sampleRate, int bitDepth, int channels, int buffers)
-//{
-//	return pool ? Source::create(sampleRate, bitDepth, channels, buffers) : nullptr;
-//}
 
 int Engine::getActiveSourceCount() const
 {

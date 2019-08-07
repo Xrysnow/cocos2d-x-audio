@@ -1,11 +1,12 @@
 ﻿#pragma once
-#include "base/CCRef.h"
 #include "AudioPool.h"
 #include "AudioFilter.h"
 #include "AudioEffect.h"
 #include "AudioMacros.h"
 #include "ALHeader.h"
+#include "base/CCRef.h"
 #include <array>
+#include <limits>
 
 namespace audio
 {
@@ -14,7 +15,7 @@ namespace audio
 	// OpenAL on iOS barfs if the max distance is +inf.
 	static const float MAX_ATTENUATION_DISTANCE = 1000000.0f;
 #else
-	static const float MAX_ATTENUATION_DISTANCE = FLT_MAX;
+	static const float MAX_ATTENUATION_DISTANCE = std::numeric_limits<float>::max();
 #endif
 
 	class Engine;
@@ -37,7 +38,7 @@ namespace audio
 	private:
 		ALuint buffer;
 		ALsizei size;
-	}; // StaticDataBuffer
+	};
 
 	class Source : public cocos2d::Ref
 	{
@@ -257,7 +258,6 @@ namespace audio
 		} cone;
 
 		int64_t offsetSamples = 0;
-		//double offsetSeconds = 0.0;
 
 		int sampleRate = 0;
 		int channels = 0;

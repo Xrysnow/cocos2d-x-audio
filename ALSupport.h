@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "AudioMacros.h"
 #include "ALHeader.h"
 #include <string>
 #include <vector>
@@ -8,7 +7,6 @@ namespace audio
 {
 	class ALSupport
 	{
-	private:
 		static void init();
 	public:
 

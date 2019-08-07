@@ -1,11 +1,12 @@
 #include "AudioStream.h"
+#include "AudioSoundData.h"
 #include "../Classes/XStream.h"
 #include "../LSTG/ResourceMgr.h"
-#include "AudioSoundData.h"
 
-// note: this implementation depends on LuaSTG-x
 using namespace audio;
 using lstg::XAudioStream;
+
+// note: this implementation depends on LuaSTG-x
 
 Stream* Stream::createFromFile(const std::string& path)
 {

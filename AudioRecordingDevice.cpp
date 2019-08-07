@@ -16,10 +16,9 @@ RecordingDevice::~RecordingDevice()
 
 bool RecordingDevice::start(int samples, int sampleRate, int bitDepth, int channels)
 {
-	ALenum format = Engine::getFormat(bitDepth, channels);
+	const ALenum format = Engine::getFormat(bitDepth, channels);
 	if (format == AL_NONE)
 	{
-#include "cocos2d.h"
 		lastError = string_format("Recording %d channels with %d bits per sample is not supported.", channels, bitDepth);
 		return false;
 	}
@@ -63,7 +62,7 @@ void RecordingDevice::stop()
 	device = nullptr;
 }
 
-SoundData *RecordingDevice::getData()
+SoundData* RecordingDevice::getData()
 {
 	if (!isRecording())
 		return nullptr;
@@ -72,7 +71,7 @@ SoundData *RecordingDevice::getData()
 	if (samples == 0)
 		return nullptr;
 
-	SoundData *soundData = new SoundData(samples, sampleRate, bitDepth, channels);
+	SoundData* soundData = new SoundData(samples, sampleRate, bitDepth, channels);
 
 	alcCaptureSamples(device, soundData->getData(), samples);
 

@@ -1,8 +1,8 @@
 ﻿#pragma once
-#include "AudioMacros.h"
-#include "base/CCRef.h"
 #include "ALHeader.h"
-#include "cocos2d.h"
+#include "base/CCRef.h"
+#include <map>
+#include <unordered_map>
 
 namespace audio
 {

@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "base/CCRef.h"
-#include <mutex>
-#include <algorithm>
+#include <cstdint>
+#include <string>
 
 namespace audio
 {

@@ -2,11 +2,8 @@
 #include "AudioDecoder.h"
 #include "AudioEngine.h"
 
-// C
 #include <cstdlib>
 #include <cstring>
-
-// C++
 #include <limits>
 #include <iostream>
 #include <vector>

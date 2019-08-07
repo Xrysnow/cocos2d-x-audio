@@ -1,9 +1,8 @@
 ﻿#pragma once
-#include <vector>
-#include <mutex>
-
 #include "AudioMacros.h"
 #include "ALHeader.h"
+#include <vector>
+#include <mutex>
 
 namespace audio
 {
@@ -72,6 +71,5 @@ namespace audio
 		// Only one thread can access this object at the same time. This mutex will
 		// make sure of that.
 		std::mutex mutex;
-
 	};	
 }

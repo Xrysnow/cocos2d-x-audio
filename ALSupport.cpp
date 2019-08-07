@@ -1,4 +1,5 @@
 ﻿#include "ALSupport.h"
+#include "AudioMacros.h"
 #include <unordered_map>
 
 using namespace std;

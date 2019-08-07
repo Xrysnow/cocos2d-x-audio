@@ -34,13 +34,7 @@ bool Effect::generateEffect()
 		return true;
 
 	alGenEffects(1, &effect);
-	if (alGetError() != AL_NO_ERROR)
-	{
-		//throw love::Exception("Failed to create sound Effect.");
-		return false;
-	}
-
-	return true;
+	return alGetError() == AL_NO_ERROR;
 #else
 	return false;
 #endif

@@ -17,9 +17,6 @@ namespace audio
 	class Engine
 	{
 	public:
-		/**
-		 * Attenuation by distance.
-		 */
 		enum class DistanceModel
 		{
 			NONE,
@@ -31,15 +28,6 @@ namespace audio
 			EXPONENT_CLAMPED,
 			MAX_ENUM
 		};
-	private:
-
-		static Engine* s_instance;
-		Engine();
-		virtual ~Engine();
-	public:
-
-		static Engine* getInstance();
-		static void destroyInstance();
 
 		/**
 		 * Gets the OpenAL format identifier based on number of
@@ -54,109 +42,91 @@ namespace audio
 		 * Gets the current number of simultaneous playing sources.
 		 * @return The current number of simultaneous playing sources.
 		 **/
-		int getActiveSourceCount() const;
+		static int getActiveSourceCount();
 
 		/**
 		 * Gets the maximum supported number of simultaneous playing sources.
 		 * @return The maximum supported number of simultaneous playing sources.
 		 **/
-		int getMaxSources() const;
-
-		/**
-		 * Play the specified Source.
-		 * @param source The Source to play.
-		 **/
-		//bool play(Source *source);
+		static int getMaxSourceCount();
 
 		/**
 		 * Play the specified Sources.
 		 * @param sources The Sources to play.
 		 **/
-		bool play(const std::vector<Source*> &sources);
-
-		/**
-		 * Stops playback on the specified source.
-		 * @param source The source on which to stop the playback.
-		 **/
-		//void stop(Source *source);
+		static bool play(const std::vector<Source*> &sources);
 
 		/**
 		 * Stops playback on the specified sources.
 		 * @param sources The sources on which to stop the playback.
 		 **/
-		void stop(const std::vector<Source*> &sources);
+		static void stop(const std::vector<Source*> &sources);
 
 		/**
 		 * Stops all playing audio.
 		 **/
-		void stop();
-
-		/**
-		 * Pauses playback on the specified source.
-		 * @param source The source on which to pause the playback.
-		 **/
-		//void pause(Source *source);
+		static void stop();
 
 		/**
 		 * Pauses playback on the specified sources.
 		 * @param sources The sources on which to pause the playback.
 		 **/
-		void pause(const std::vector<Source*> &sources);
+		static void pause(const std::vector<Source*> &sources);
 
 		/**
 		 * Pauses all audio.
 		 **/
-		std::vector<Source*> pause();
+		static std::vector<Source*> pause();
 
 		/**
 		 * Sets the master volume, where 0.0f is min (off) and 1.0f is max.
 		 * @param volume The new master volume.
 		 **/
-		void setVolume(float volume);
+		static void setVolume(float volume);
 
 		/**
 		 * Gets the master volume.
 		 * @return The current master volume.
 		 **/
-		float getVolume() const;
+		static float getVolume();
 
 		/**
 		 * Gets the position of the listener.
 		 **/
-		cocos2d::Vec3 getPosition() const;
+		static cocos2d::Vec3 getPosition();
 
 		/**
 		 * Sets the position of the listener.
 		 **/
-		void setPosition(const cocos2d::Vec3& v);
+		static void setPosition(const cocos2d::Vec3& v);
 
 		/**
 		 * Gets the orientation of the listener.
 		 * @return A vector array of size 2 containing the forward
 		 * vector and the up vector.
 		 **/
-		std::array<cocos2d::Vec3, 2> getOrientation() const;
+		static std::array<cocos2d::Vec3, 2> getOrientation();
 
 		/**
 		 * Sets the orientation of the listener.
 		 * @param forward the forward vector
 		 * @param up the up vector.
 		 **/
-		void setOrientation(const cocos2d::Vec3& forward, const cocos2d::Vec3& up);
+		static void setOrientation(const cocos2d::Vec3& forward, const cocos2d::Vec3& up);
 
 		/**
 		 * Gets the velocity of the listener.
 		 **/
-		cocos2d::Vec3 getVelocity() const;
+		static cocos2d::Vec3 getVelocity();
 
 		/**
 		 * Sets the velocity of the listener.
 		 **/
-		void setVelocity(const cocos2d::Vec3& v);
+		static void setVelocity(const cocos2d::Vec3& v);
 
-		void setDopplerScale(float scale);
+		static void setDopplerScale(float scale);
 
-		float getDopplerScale() const;
+		static float getDopplerScale();
 
 		//void setMeter(float scale);
 
@@ -165,19 +135,19 @@ namespace audio
 		/**
 		 * @return Reference to a vector of pointers to recording devices. May be empty.
 		 **/
-		std::vector<RecordingDevice*> getRecordingDevices();
+		static std::vector<RecordingDevice*> getRecordingDevices();
 
 		/**
 		 * Gets the distance model used for attenuation.
 		 * @return Distance model.
 		 */
-		DistanceModel getDistanceModel() const;
+		static DistanceModel getDistanceModel();
 
 		/**
 		 * Sets the distance model used for attenuation.
 		 * @param distanceModel Distance model.
 		 */
-		void setDistanceModel(DistanceModel distanceModel);
+		static void setDistanceModel(DistanceModel distanceModel);
 
 		/**
 		 * Sets scene EFX effect.
@@ -185,76 +155,76 @@ namespace audio
 		 * @param params Effect description table.
 		 * @return true if successful, false otherwise.
 		 */
-		bool setEffect(const std::string& name, const Effect::ParamMap& params);
+		static bool setEffect(const std::string& name, const Effect::ParamMap& params);
 
 		/**
 		 * Removes scene EFX effect.
 		 * @param name Effect name to clear.
 		 * @return true if successful, false otherwise.
 		 */
-		bool unsetEffect(const std::string& name);
+		static bool removeEffect(const std::string& name);
 
 		/**
 		 * Gets scene EFX effect.
 		 * @param name Effect name to get data from.
 		 * @return Effect description table.
 		 */
-		Effect::ParamMap getEffect(const std::string& name);
+		static Effect::ParamMap getEffect(const std::string& name);
 
 		/**
 		 * Gets list of EFX effect names.
 		 * @return List of EFX names to fill.
 		 */
-		std::vector<std::string> getActiveEffects() const;
+		static std::vector<std::string> getActiveEffects();
 
 		/**
 		 * Gets maximum number of scene EFX effects.
 		 * @return number of effects.
 		 */
-		int getMaxSceneEffects() const;
+		static int getMaxEffectCount();
 
 		/**
 		 * Gets maximum number of source EFX effects.
 		 * @return number of effects.
 		 */
-		int getMaxSourceEffects() const;
+		static int getMaxSourceEffectCount();
 
 		/**
 		 * Gets EFX (or analog) availability.
 		 * @return true if supported.
 		 */
-		bool isEFXsupported() const;
+		static bool isEffectSupported();
 
 		/**
 		 * Sets whether audio from other apps mixes with love.audio or is muted,
 		 * on supported platforms.
 		 **/
-		//bool setMixWithSystem(bool mix);
+		//static bool setMixWithSystem(bool mix);
 
-		bool getEffectID(const std::string& name, ALuint &id);
+		static bool getEffectID(const std::string& name, ALuint &id);
 
-		void onEnterBackground();
-		void onEnterForeground();
+		static void onEnterBackground();
+		static void onEnterForeground();
 
-		std::string getLastError() const { return lastError; }
-		bool isValid() const { return valid; }
+		static std::string getLastError() { return lastError; }
+		static bool isValid() { return valid; }
+
+		static bool init();
+		static void end();
 
 	private:
 
-		bool init();
-		void finish();
+		static void initializeEFX();
 
-		void initializeEFX();
-
-		bool valid = false;
+		static bool valid;
 		// The OpenAL device.
-		ALCdevice *device;
-
-		// The OpenAL capture devices.
-		cocos2d::Vector<RecordingDevice*> capture;
+		static ALCdevice *device;
 
 		// The OpenAL context.
-		ALCcontext *context;
+		static ALCcontext *context;
+
+		// The OpenAL capture devices.
+		static cocos2d::Vector<RecordingDevice*> capture;
 
 		// The OpenAL effects
 		struct EffectMapStorage
@@ -262,20 +232,20 @@ namespace audio
 			Effect *effect;
 			ALuint slot;
 		};
-		std::map<std::string, struct EffectMapStorage> effectmap;
-		std::stack<ALuint> slotlist;
-		int MAX_SCENE_EFFECTS = 64;
-		int MAX_SOURCE_EFFECTS = 64;
+		static std::map<std::string, struct EffectMapStorage> effectmap;
+		static std::stack<ALuint> slotlist;
+		static int MAX_SCENE_EFFECTS;
+		static int MAX_SOURCE_EFFECTS;
 
 		// The Pool.
-		Pool *pool;
+		static Pool *pool;
 
-		cocos2d::Vector<Source*> tempSources;
+		static cocos2d::Vector<Source*> tempSources;
 
-		DistanceModel distanceModel;
-		//float metersPerUnit = 1.0;
+		static DistanceModel distanceModel;
+		//static float metersPerUnit = 1.0;
 
-		std::string lastError;
+		static std::string lastError;
 	};
 
 	std::string string_format(const char* format, ...);

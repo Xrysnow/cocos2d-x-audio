@@ -54,7 +54,7 @@ bool Source::initWithSoundData(SoundData *soundData)
 	velocity.setZero();
 	direction.setZero();
 
-	for (unsigned int i = 0; i < (unsigned int)Engine::getInstance()->getMaxSourceEffects(); i++)
+	for (unsigned int i = 0; i < (unsigned int)Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
 	return true;
 }
@@ -105,7 +105,7 @@ bool Source::initWithDecoder( Decoder *_decoder)
 	velocity.setZero();
 	direction.setZero();
 
-	for (unsigned int i = 0; i < (unsigned int)Engine::getInstance()->getMaxSourceEffects(); i++)
+	for (unsigned int i = 0; i < (unsigned int)Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
 	return true;
 }
@@ -149,7 +149,7 @@ bool Source::init(int _sampleRate, int _bitDepth, int _channels, int _buffers)
 	velocity.setZero();
 	direction.setZero();
 
-	for (unsigned int i = 0; i < (unsigned int)Engine::getInstance()->getMaxSourceEffects(); i++)
+	for (unsigned int i = 0; i < (unsigned int)Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
 	return true;
 }
@@ -216,7 +216,7 @@ bool Source::initWithOther(const Source &s)
 	velocity.setZero();
 	direction.setZero();
 
-	for (unsigned int i = 0; i < (unsigned int)Engine::getInstance()->getMaxSourceEffects(); i++)
+	for (unsigned int i = 0; i < (unsigned int)Engine::getMaxSourceEffectCount(); i++)
 	{
 		// filter out already taken slots
 		bool push = true;
@@ -1295,7 +1295,7 @@ void Source::reset()
 	alSourcef(source, AL_ROOM_ROLLOFF_FACTOR, rolloffFactor); //reverb-specific rolloff
 	alSourcei(source, AL_DIRECT_FILTER, directfilter ? directfilter->getFilter() : AL_FILTER_NULL);
 	// clear all send slots, then re-enable applied ones
-	for (int i = 0; i < Engine::getInstance()->getMaxSourceEffects(); i++)
+	for (int i = 0; i < Engine::getMaxSourceEffectCount(); i++)
 		alSource3i(source, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, i, AL_FILTER_NULL);
 	for (auto& i : effectmap)
 		alSource3i(source, AL_AUXILIARY_SEND_FILTER,
@@ -1568,7 +1568,7 @@ bool Source::setEffect(const std::string& name)
 	Filter *filter;
 
 	// effect with this name doesn't exist
-	if (!Engine::getInstance()->getEffectID(name, target))
+	if (!Engine::getEffectID(name, target))
 		return false;
 
 	auto iter = effectmap.find(name);
@@ -1606,7 +1606,7 @@ bool Source::setEffect(const std::string& name, const Filter::ParamMap& filterPa
 	Filter *filter = nullptr;
 
 	// effect with this name doesn't exist
-	if (!Engine::getInstance()->getEffectID(name, target))
+	if (!Engine::getEffectID(name, target))
 		return false;
 
 	auto iter = effectmap.find(name);

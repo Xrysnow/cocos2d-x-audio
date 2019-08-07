@@ -53,38 +53,20 @@ public:
 };
 PoolThread* PoolThread::Instance = nullptr;
 
-Engine* Engine::s_instance = nullptr;
+bool Engine::valid = false;
+ALCdevice* Engine::device = nullptr;
+ALCcontext* Engine::context = nullptr;
+Pool* Engine::pool = nullptr;
+cocos2d::Vector<RecordingDevice*> Engine::capture{};
+cocos2d::Vector<Source*> Engine::tempSources{};
+Engine::DistanceModel Engine::distanceModel = DistanceModel::INVERSE_CLAMPED;
 
-Engine::Engine()
-	: device(nullptr)
-	, context(nullptr)
-	, pool(nullptr)
-	, distanceModel(DistanceModel::INVERSE_CLAMPED)
-{
-}
+std::map<std::string, struct Engine::EffectMapStorage> Engine::effectmap{};
+std::stack<ALuint> Engine::slotlist{};
 
-Engine::~Engine()
-{
-}
-
-Engine* Engine::getInstance()
-{
-	if(!s_instance)
-	{
-		s_instance = new Engine();
-		s_instance->valid = s_instance->init();
-	}
-	return s_instance;
-}
-
-void Engine::destroyInstance()
-{
-	if (!s_instance)
-		return;
-	s_instance->finish();
-	delete s_instance;
-	s_instance = nullptr;
-}
+int Engine::MAX_SCENE_EFFECTS = 64;
+int Engine::MAX_SOURCE_EFFECTS = 64;
+std::string Engine::lastError{};
 
 ALenum Engine::getFormat(int bitDepth, int channels)
 {
@@ -107,30 +89,20 @@ ALenum Engine::getFormat(int bitDepth, int channels)
 	return AL_NONE;
 }
 
-int Engine::getActiveSourceCount() const
+int Engine::getActiveSourceCount()
 {
 	return pool ? pool->getActiveSourceCount() : 0;
 }
 
-int Engine::getMaxSources() const
+int Engine::getMaxSourceCount()
 {
 	return pool ? pool->getMaxSources() : 0;
 }
-
-//bool Engine::play(Source *source)
-//{
-//	return source->play();
-//}
 
 bool Engine::play(const std::vector<Source*> &sources)
 {
 	return Source::playBatch(sources);
 }
-
-//void Engine::stop(Source *source)
-//{
-//	source->stop();
-//}
 
 void Engine::stop(const std::vector<Source*> &sources)
 {
@@ -141,11 +113,6 @@ void Engine::stop()
 {
 	Source::stopAll();
 }
-
-//void Engine::pause(Source *source)
-//{
-//	source->pause();
-//}
 
 void Engine::pause(const std::vector<Source*> &sources)
 {
@@ -162,14 +129,14 @@ void Engine::setVolume(float volume)
 	alListenerf(AL_GAIN, volume);
 }
 
-float Engine::getVolume() const
+float Engine::getVolume()
 {
 	ALfloat volume;
 	alGetListenerf(AL_GAIN, &volume);
 	return volume;
 }
 
-cocos2d::Vec3 Engine::getPosition() const
+cocos2d::Vec3 Engine::getPosition()
 {
 	cocos2d::Vec3 v;
 	alGetListenerfv(AL_POSITION, (float*)&v);
@@ -181,7 +148,7 @@ void Engine::setPosition(const cocos2d::Vec3& v)
 	alListenerfv(AL_POSITION, (float*)&v);
 }
 
-std::array<cocos2d::Vec3, 2> Engine::getOrientation() const
+std::array<cocos2d::Vec3, 2> Engine::getOrientation()
 {
 	std::array<cocos2d::Vec3, 2> v;
 	alGetListenerfv(AL_ORIENTATION, (float*)v.data());
@@ -194,7 +161,7 @@ void Engine::setOrientation(const cocos2d::Vec3& forward, const cocos2d::Vec3& u
 	alListenerfv(AL_ORIENTATION, (float*)v);
 }
 
-cocos2d::Vec3 Engine::getVelocity() const
+cocos2d::Vec3 Engine::getVelocity()
 {
 	cocos2d::Vec3 v;
 	alGetListenerfv(AL_VELOCITY, (float*)&v);
@@ -212,7 +179,7 @@ void Engine::setDopplerScale(float scale)
 		alDopplerFactor(scale);
 }
 
-float Engine::getDopplerScale() const
+float Engine::getDopplerScale()
 {
 	return alGetFloat(AL_DOPPLER_FACTOR);
 }
@@ -233,14 +200,14 @@ float Engine::getMeter() const
 	return metersPerUnit;
 }
 */
-Engine::DistanceModel Engine::getDistanceModel() const
+Engine::DistanceModel Engine::getDistanceModel()
 {
 	return distanceModel;
 }
 
-void Engine::setDistanceModel(DistanceModel distanceModel)
+void Engine::setDistanceModel(DistanceModel distanceModel_)
 {
-	this->distanceModel = distanceModel;
+	distanceModel = distanceModel_;
 
 	switch (distanceModel)
 	{
@@ -399,7 +366,7 @@ bool Engine::setEffect(const std::string& name, const Effect::ParamMap& params)
 	return result;
 }
 
-bool Engine::unsetEffect(const std::string& name)
+bool Engine::removeEffect(const std::string& name)
 {
 	auto iter = effectmap.find(name);
 	if (iter == effectmap.end())
@@ -427,7 +394,7 @@ Effect::ParamMap Engine::getEffect(const std::string& name)
 	return iter->second.effect->getParams();
 }
 
-std::vector<std::string> Engine::getActiveEffects() const
+std::vector<std::string> Engine::getActiveEffects()
 {
 	if (effectmap.empty())
 		return {};
@@ -438,17 +405,17 @@ std::vector<std::string> Engine::getActiveEffects() const
 	return list;
 }
 
-int Engine::getMaxSceneEffects() const
+int Engine::getMaxEffectCount()
 {
 	return MAX_SCENE_EFFECTS;
 }
 
-int Engine::getMaxSourceEffects() const
+int Engine::getMaxSourceEffectCount()
 {
 	return MAX_SOURCE_EFFECTS;
 }
 
-bool Engine::isEFXsupported() const
+bool Engine::isEffectSupported()
 {
 #ifdef ALC_EXT_EFX
 	return (alGenEffects != nullptr);
@@ -563,13 +530,15 @@ bool Engine::init()
 		alcMakeContextCurrent(nullptr);
 		alcDestroyContext(context);
 		alcCloseDevice(device);
+		lastError = "Could not initialize source pool.";
 		return false;
 	}
 	PoolThread::Instance = new PoolThread(pool);
+	valid = true;
 	return true;
 }
 
-void Engine::finish()
+void Engine::end()
 {
 	valid = false;
 	PoolThread::Instance->setFinish();

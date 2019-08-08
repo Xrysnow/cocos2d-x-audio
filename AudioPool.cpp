@@ -90,22 +90,14 @@ void Pool::destroyInstance()
 
 bool Pool::isAvailable()
 {
-	bool has = false;
-	{
-		auto lk = lock();
-		has = !available.empty();
-	}
-	return has;
+	auto lk = lock();
+	return !available.empty();
 }
 
 bool Pool::isPlaying(Source *s)
 {
-	bool p = false;
-	{
-		auto lk = lock();
-		p = (playing.find(s) != playing.end());
-	}
-	return p;
+	auto lk = lock();
+	return playing.find(s) != playing.end();
 }
 
 void Pool::update()

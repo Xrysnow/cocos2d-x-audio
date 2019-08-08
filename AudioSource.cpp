@@ -328,8 +328,7 @@ void Source::stop()
 
 void Source::pause()
 {
-	auto l = pool->lock();
-	if (pool->isPlaying(this))
+	if (pool->isPlaying(this)) // lock in isPlaying
 		pauseAtomic();
 }
 

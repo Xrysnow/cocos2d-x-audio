@@ -18,5 +18,7 @@ namespace audio
 		bool isSeekable() override;
 	private:
 		drmp3* mp3 = nullptr;
+		int64_t frameBegin = 0;
+		int64_t frameEnd = -1;
 	};	
 }

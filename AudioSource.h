@@ -205,6 +205,7 @@ namespace audio
 
 	public:
 
+		Type getType() const { return sourceType; }
 		size_t copyBuffer(char* dst, size_t size, size_t offset);
 		int64_t getBufferOffset();
 

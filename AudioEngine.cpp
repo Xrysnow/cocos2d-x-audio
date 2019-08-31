@@ -126,6 +126,7 @@ std::vector<Source*> Engine::pause()
 
 void Engine::setVolume(float volume)
 {
+	volume = std::max(0.f, std::min(volume, 1.f));
 	alListenerf(AL_GAIN, volume);
 }
 
@@ -175,8 +176,8 @@ void Engine::setVelocity(const cocos2d::Vec3& v)
 
 void Engine::setDopplerScale(float scale)
 {
-	if (scale >= 0.0f)
-		alDopplerFactor(scale);
+	scale = std::max(0.f, scale);
+	alDopplerFactor(scale);
 }
 
 float Engine::getDopplerScale()

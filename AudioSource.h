@@ -117,10 +117,10 @@ namespace audio
 		virtual void setAirAbsorptionFactor(float value);
 		virtual float getAirAbsorptionFactor();
 
-		virtual int getChannelCount() const { return channels; }
-		virtual int getSampleRate() const { return sampleRate; }
-		virtual int getBitDepth() const { return bitDepth; }
-		virtual int getBytesPerFrame() const { return channels * bitDepth / 8; }
+		virtual int getChannelCount() const;
+		virtual int getSampleRate() const;
+		virtual int getBitDepth() const;
+		virtual int getBytesPerFrame() const;
 
 		/**
 		 * \brief Sets a low-pass, high-pass, or band-pass filter to apply when playing the Source.

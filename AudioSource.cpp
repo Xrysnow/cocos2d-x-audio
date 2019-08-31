@@ -28,7 +28,7 @@ Source::Source()
 {
 }
 
-bool Source::initWithSoundData(SoundData *soundData)
+bool Source::initWithSoundData(SoundData* soundData)
 {
 	sourceType = Type::STATIC;
 	pool = Pool::getInstance();
@@ -59,7 +59,7 @@ bool Source::initWithSoundData(SoundData *soundData)
 	return true;
 }
 
-bool Source::initWithDecoder( Decoder *_decoder)
+bool Source::initWithDecoder(Decoder* _decoder)
 {
 	sourceType = Type::STREAM;
 	pool = Pool::getInstance();
@@ -80,7 +80,6 @@ bool Source::initWithDecoder( Decoder *_decoder)
 	channels = decoder->getChannelCount();
 	bitDepth = decoder->getBitDepth();
 	buffers = DEFAULT_BUFFERS;
-	//AINFO("bitDepth: %d, channels: %d", bitDepth, channels);
 	if (Engine::getFormat(decoder->getBitDepth(), decoder->getChannelCount()) == AL_NONE)
 	{
 		AINFO("failed for format");
@@ -609,21 +608,6 @@ int64_t Source::tell()
 	return offset;
 }
 
-void Source::setTime(double seconds)
-{
-	seek(seconds*sampleRate);
-}
-
-double Source::getTime()
-{
-	return (double)tell() / sampleRate;
-}
-
-double Source::getTotalTime()
-{
-	return (double)getTotalFrames() / sampleRate;
-}
-
 int64_t Source::getTotalFrames()
 {
 	auto l = pool->lock();
@@ -649,6 +633,21 @@ int64_t Source::getTotalFrames()
 	default:
 		return 0;
 	}
+}
+
+void Source::setTime(double seconds)
+{
+	seek(seconds*sampleRate);
+}
+
+double Source::getTime()
+{
+	return (double)tell() / sampleRate;
+}
+
+double Source::getTotalTime()
+{
+	return (double)getTotalFrames() / sampleRate;
 }
 
 void Source::setPosition(const cocos2d::Vec3& v)
@@ -1348,12 +1347,12 @@ int Source::streamAtomic(ALuint buffer, Decoder* d)
 	return decoded;
 }
 
-void Source::setMinVolume(float value)
+void Source::setMinVolume(float v)
 {
+	v = std::max(0.f, v);
 	if (valid)
-		alSourcef(source, AL_MIN_GAIN, value);
-
-	minVolume = value;
+		alSourcef(source, AL_MIN_GAIN, v);
+	minVolume = v;
 }
 
 float Source::getMinVolume() const
@@ -1364,17 +1363,16 @@ float Source::getMinVolume() const
 		alGetSourcef(source, AL_MIN_GAIN, &f);
 		return f;
 	}
-
 	// In case the Source isn't playing.
 	return this->minVolume;
 }
 
-void Source::setMaxVolume(float value)
+void Source::setMaxVolume(float v)
 {
+	v = std::max(0.f, v);
 	if (valid)
-		alSourcef(source, AL_MAX_GAIN, value);
-
-	maxVolume = value;
+		alSourcef(source, AL_MAX_GAIN, v);
+	maxVolume = v;
 }
 
 float Source::getMaxVolume() const
@@ -1385,42 +1383,8 @@ float Source::getMaxVolume() const
 		alGetSourcef(source, AL_MAX_GAIN, &f);
 		return f;
 	}
-
 	// In case the Source isn't playing.
 	return maxVolume;
-}
-
-void Source::setReferenceDistance(float value)
-{
-	if (channels > 1)
-	{
-		SpatialSupportException();
-		return;
-	}
-
-	if (valid)
-		alSourcef(source, AL_REFERENCE_DISTANCE, value);
-
-	referenceDistance = value;
-}
-
-float Source::getReferenceDistance()
-{
-	if (channels > 1)
-	{
-		SpatialSupportException();
-		return 0;
-	}
-
-	if (valid)
-	{
-		ALfloat f;
-		alGetSourcef(source, AL_REFERENCE_DISTANCE, &f);
-		return f;
-	}
-
-	// In case the Source isn't playing.
-	return referenceDistance;
 }
 
 void Source::setRolloffFactor(float value)
@@ -1454,6 +1418,39 @@ float Source::getRolloffFactor()
 
 	// In case the Source isn't playing.
 	return rolloffFactor;
+}
+
+void Source::setReferenceDistance(float value)
+{
+	if (channels > 1)
+	{
+		SpatialSupportException();
+		return;
+	}
+
+	if (valid)
+		alSourcef(source, AL_REFERENCE_DISTANCE, value);
+
+	referenceDistance = value;
+}
+
+float Source::getReferenceDistance()
+{
+	if (channels > 1)
+	{
+		SpatialSupportException();
+		return 0;
+	}
+
+	if (valid)
+	{
+		ALfloat f;
+		alGetSourcef(source, AL_REFERENCE_DISTANCE, &f);
+		return f;
+	}
+
+	// In case the Source isn't playing.
+	return referenceDistance;
 }
 
 void Source::setMaxDistance(float value)
@@ -1518,6 +1515,26 @@ float Source::getAirAbsorptionFactor()
 	}
 
 	return absorptionFactor;
+}
+
+int Source::getChannelCount() const
+{
+	return channels;
+}
+
+int Source::getSampleRate() const
+{
+	return sampleRate;
+}
+
+int Source::getBitDepth() const
+{
+	return bitDepth;
+}
+
+int Source::getBytesPerFrame() const
+{
+	return channels * bitDepth / 8;
 }
 
 bool Source::setFilter(const Filter::ParamMap& params)

@@ -42,6 +42,7 @@ namespace audio
 
 	class Source : public cocos2d::Ref
 	{
+		friend class Pool;
 	public:
 
 		enum class Type
@@ -53,12 +54,15 @@ namespace audio
 		};
 
 	private:
+
 		Source();
 		bool initWithSoundData(SoundData *soundData);
 		bool initWithDecoder(Decoder *decoder);
 		bool init(int sampleRate, int bitDepth, int channels, int buffers);
 		bool initWithOther(const Source &s);
+
 	public:
+
 		virtual ~Source();
 
 		static Source* createFromSoundData(SoundData *soundData);
@@ -189,6 +193,8 @@ namespace audio
 		 */
 		virtual bool queue(SoundData* data, ssize_t offset = -1, ssize_t length = -1);
 
+	protected:
+
 		void prepareAtomic();
 		void teardownAtomic();
 
@@ -196,6 +202,8 @@ namespace audio
 		void stopAtomic();
 		void pauseAtomic();
 		void resumeAtomic();
+
+	public:
 
 		size_t copyBuffer(char* dst, size_t size, size_t offset);
 		int64_t getBufferOffset();
@@ -210,6 +218,8 @@ namespace audio
 		static void stopAll();
 
 	private:
+
+		bool releaseSource(bool stop = true);
 
 		void reset();
 

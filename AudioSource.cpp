@@ -323,7 +323,7 @@ void Source::stop()
 	auto l = pool->lock();
 	if (!valid)
 		return;
-	pool->releaseSource(this);
+	releaseSource();
 }
 
 void Source::pause()
@@ -520,8 +520,7 @@ void Source::seek(int64_t offset)
 		{
 			// To drain all buffers
 			if (valid)
-				//stop();
-				pool->releaseSource(this);
+				releaseSource();
 
 			decoder->seek(offsetSamples);
 
@@ -578,8 +577,7 @@ void Source::seek(int64_t offset)
 
 	if (wasPlaying && (alGetError() == AL_INVALID_VALUE || sourceType == Type::STREAM && !isPlaying()))
 	{
-		//stop();
-		pool->releaseSource(this);
+		releaseSource();
 		if (isLooping())
 		{
 			//play();
@@ -1050,9 +1048,8 @@ bool Source::playAtomic(ALuint source)
 
 	if (!success)
 	{
-		valid = true; //stop() needs source to be valid
-		//stop();
-		pool->releaseSource(this);
+		//valid = true; //stop() needs source to be valid
+		releaseSource();
 	}
 	// Static sources: reset the pending offset since it's not valid anymore.
 	if (sourceType != Type::STREAM)
@@ -1083,8 +1080,7 @@ void Source::resumeAtomic()
 
 		//failed to play or nothing to play
 		if (alGetError() == AL_INVALID_VALUE || sourceType == Type::STREAM && (int)unusedBuffers.size() == buffers)
-			//stop();
-			pool->releaseSource(this);
+			releaseSource();
 	}
 }
 
@@ -1136,8 +1132,9 @@ bool Source::playBatch(const std::vector<Source*> &sources)
 {
 	if (sources.empty())
 		return true;
-
-	Pool *pool = ((Source*)sources[0])->pool;
+	auto pool = Pool::getInstance();
+	if (!pool)
+		return false;
 	auto l = pool->lock();
 
 	// NOTE: not bool, because std::vector<bool> is implemented as a bitvector
@@ -1147,11 +1144,11 @@ bool Source::playBatch(const std::vector<Source*> &sources)
 
 	for (size_t i = 0; i < sources.size(); i++)
 	{
-		if (!pool->assignSource((Source*)sources[i], ids[i], wasPlaying[i]))
+		if (!pool->assignSource(sources[i], ids[i], wasPlaying[i]))
 		{
 			for (size_t j = 0; j < i; j++)
 				if (!wasPlaying[j])
-					pool->releaseSource((Source*)sources[j], false);
+					sources[j]->releaseSource(false);
 			return false;
 		}
 	}
@@ -1168,7 +1165,7 @@ bool Source::playBatch(const std::vector<Source*> &sources)
 
 		if (!wasPlaying[i])
 		{
-			Source *source = (Source*)sources[i];
+			auto source = sources[i];
 			source->source = ids[i];
 			source->prepareAtomic();
 		}
@@ -1178,13 +1175,11 @@ bool Source::playBatch(const std::vector<Source*> &sources)
 
 	alGetError();
 	alSourcePlayv((ALsizei)toPlay.size(), &toPlay[0]);
-	bool success = alGetError() == AL_NO_ERROR;
+	const bool success = alGetError() == AL_NO_ERROR;
 
-	for (auto &_source : sources)
+	for (auto& source : sources)
 	{
-		Source *source = (Source*)_source;
 		source->valid = source->valid || success;
-
 		if (success && source->sourceType != Type::STREAM)
 			source->offsetSamples = 0;
 	}
@@ -1196,27 +1191,26 @@ void Source::stopBatch(const std::vector<Source*> &sources)
 {
 	if (sources.empty())
 		return;
-
-	auto pool = ((Source*)sources[0])->pool;
+	auto pool = Pool::getInstance();
+	if (!pool)
+		return;
 	auto l = pool->lock();
 
 	std::vector<ALuint> sourceIds;
 	sourceIds.reserve(sources.size());
-	for (auto &_source : sources)
+	for (auto& source : sources)
 	{
-		Source *source = (Source*)_source;
 		if (source->valid)
 			sourceIds.push_back(source->source);
 	}
 
 	alSourceStopv((ALsizei)sourceIds.size(), &sourceIds[0]);
 
-	for (auto &_source : sources)
+	for (auto& source : sources)
 	{
-		Source *source = (Source*)_source;
 		if (source->valid)
 			source->teardownAtomic();
-		pool->releaseSource(source, false);
+		source->releaseSource(false);
 	}
 }
 
@@ -1224,14 +1218,15 @@ void Source::pauseBatch(const std::vector<Source*> &sources)
 {
 	if (sources.empty())
 		return;
-
-	auto l = ((Source*)sources[0])->pool->lock();
+	auto pool = Pool::getInstance();
+	if (!pool)
+		return;
+	auto l = pool->lock();
 
 	std::vector<ALuint> sourceIds;
 	sourceIds.reserve(sources.size());
-	for (auto &_source : sources)
+	for (auto& source : sources)
 	{
-		Source *source = (Source*)_source;
 		if (source->valid)
 			sourceIds.push_back(source->source);
 	}
@@ -1242,14 +1237,15 @@ void Source::pauseBatch(const std::vector<Source*> &sources)
 std::vector<Source*> Source::pauseAll()
 {
 	auto pool = Pool::getInstance();
-	if (!pool) return {};
+	if (!pool)
+		return {};
 	std::vector<Source*> sources;
 	{
 		auto l = pool->lock();
 		sources = pool->getPlayingSources();
 	}
 
-	auto newend = std::remove_if(sources.begin(), sources.end(), [](Source* s) {
+	const auto newend = std::remove_if(sources.begin(), sources.end(), [](Source* s) {
 		return !s->isPlaying();
 	});
 	sources.erase(newend, sources.end());
@@ -1261,13 +1257,19 @@ std::vector<Source*> Source::pauseAll()
 void Source::stopAll()
 {
 	auto pool = Pool::getInstance();
-	if (!pool) return;
+	if (!pool)
+		return;
 	std::vector<Source*> sources;
 	{
 		auto l = pool->lock();
 		sources = pool->getPlayingSources();
 	}
 	stopBatch(sources);
+}
+
+bool Source::releaseSource(bool stop)
+{
+	return pool->releaseSource(this, stop);
 }
 
 void Source::reset()

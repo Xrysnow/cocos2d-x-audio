@@ -112,7 +112,6 @@ void Pool::update()
 		if (!i.first->update())
 			torelease.push_back(i.first);
 	}
-
 	for (auto& s : torelease)
 		releaseSource(s);
 }
@@ -155,27 +154,22 @@ bool Pool::assignSource(Source *source, ALuint &out, char &wasPlaying)
 bool Pool::releaseSource(Source *source, bool stop)
 {
 	ALuint s;
-
 	if (findSource(source, s))
 	{
 		if (stop)
 			source->stopAtomic();
-		source->release();//TODO: ???
 		available.push(s);
 		playing.erase(source);
 		return true;
 	}
-
 	return false;
 }
 
 bool Pool::findSource(Source *source, ALuint &out)
 {
 	const auto i = playing.find(source);
-
 	if (i == playing.end())
 		return false;
-
 	out = i->second;
 	return true;
 }

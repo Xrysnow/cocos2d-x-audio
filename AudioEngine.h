@@ -17,14 +17,24 @@ namespace audio
 	class Engine
 	{
 	public:
+		/**
+		 * The different distance models.
+		 */
 		enum class DistanceModel
 		{
+			/** Sources do not get attenuated. */
 			NONE,
+			/** Inverse distance attenuation. */
 			INVERSE,
+			/** Inverse distance attenuation. Gain is clamped. */
 			INVERSE_CLAMPED,
+			/** Linear attenuation. */
 			LINEAR,
+			/** Linear attenuation. Gain is clamped. */
 			LINEAR_CLAMPED,
+			/** Exponential attenuation. */
 			EXPONENT,
+			/** Exponential attenuation. Gain is clamped. */
 			EXPONENT_CLAMPED,
 			MAX_ENUM
 		};
@@ -35,97 +45,111 @@ namespace audio
 		 * @param channels
 		 * @param bitDepth Either 8-bit samples, or 16-bit samples.
 		 * @return One of AL_FORMAT_*, or AL_NONE if unsupported format.
-		 **/
+		 */
 		static ALenum getFormat(int bitDepth, int channels);
 
 		/**
 		 * Gets the current number of simultaneous playing sources.
 		 * @return The current number of simultaneous playing sources.
-		 **/
+		 */
 		static int getActiveSourceCount();
 
 		/**
 		 * Gets the maximum supported number of simultaneous playing sources.
 		 * @return The maximum supported number of simultaneous playing sources.
-		 **/
+		 */
 		static int getMaxSourceCount();
 
 		/**
-		 * Play the specified Sources.
-		 * @param sources The Sources to play.
-		 **/
+		 * Simultaneously plays all given Sources.
+		 * @param sources A list containing Sources to play.
+		 */
 		static bool play(const std::vector<Source*> &sources);
 
 		/**
-		 * Stops playback on the specified sources.
-		 * @param sources The sources on which to stop the playback.
-		 **/
+		 * Simultaneously stops all given Sources.
+		 * @param sources A list containing Sources to stop.
+		 */
 		static void stop(const std::vector<Source*> &sources);
 
 		/**
-		 * Stops all playing audio.
-		 **/
+		 * Stops all currently active sources.
+		 */
 		static void stop();
 
 		/**
-		 * Pauses playback on the specified sources.
-		 * @param sources The sources on which to pause the playback.
-		 **/
+		 * Pauses the given Sources.
+		 * @param sources A list containing Sources to pause.
+		 */
 		static void pause(const std::vector<Source*> &sources);
 
 		/**
-		 * Pauses all audio.
-		 **/
+		 * Pauses all currently active Sources and returns them.
+		 * @return A list containing Sources that were paused by this call.
+		 */
 		static std::vector<Source*> pause();
 
 		/**
 		 * Sets the master volume, where 0.0f is min (off) and 1.0f is max.
 		 * @param volume The new master volume.
-		 **/
+		 */
 		static void setVolume(float volume);
 
 		/**
 		 * Gets the master volume.
 		 * @return The current master volume.
-		 **/
+		 */
 		static float getVolume();
 
 		/**
 		 * Gets the position of the listener.
-		 **/
+		 * @note Positional audio only works for mono (i.e. non-stereo) sources.
+		 * @return The position of the listener.
+		 */
 		static cocos2d::Vec3 getPosition();
 
 		/**
 		 * Sets the position of the listener.
-		 **/
+		 * @param v The position of the listener.
+		 */
 		static void setPosition(const cocos2d::Vec3& v);
 
 		/**
 		 * Gets the orientation of the listener.
 		 * @return A vector array of size 2 containing the forward
-		 * vector and the up vector.
-		 **/
+		 * vector and the up vector of the listener orientation.
+		 */
 		static std::array<cocos2d::Vec3, 2> getOrientation();
 
 		/**
 		 * Sets the orientation of the listener.
-		 * @param forward the forward vector
-		 * @param up the up vector.
-		 **/
+		 * @param forward Forward vector of the listener orientation.
+		 * @param up Up vector of the listener orientation.
+		 */
 		static void setOrientation(const cocos2d::Vec3& forward, const cocos2d::Vec3& up);
 
 		/**
 		 * Gets the velocity of the listener.
-		 **/
+		 * @return The velocity of the listener.
+		 */
 		static cocos2d::Vec3 getVelocity();
 
 		/**
 		 * Sets the velocity of the listener.
-		 **/
+		 * @param v The velocity of the listener.
+		 */
 		static void setVelocity(const cocos2d::Vec3& v);
 
+		/**
+		 * Sets a global scale factor for velocity-based doppler effects. The default scale value is 1.
+		 * @param scale The new doppler scale factor. The scale must be greater than 0.
+		 */
 		static void setDopplerScale(float scale);
 
+		/**
+		 * Gets the current global scale factor for velocity-based doppler effects.
+		 * @return The current doppler scale factor.
+		 */
 		static float getDopplerScale();
 
 		//void setMeter(float scale);
@@ -133,73 +157,75 @@ namespace audio
 		//float getMeter() const;
 
 		/**
-		 * @return Reference to a vector of pointers to recording devices. May be empty.
-		 **/
+		 * Gets a list of RecordingDevices on the system.
+		 * 
+		 * The first device in the list is the user's default recording device. The list may be empty
+		 * if there are no microphones connected to the system.
+		 * @return The list of connected recording devices.
+		 */
 		static std::vector<RecordingDevice*> getRecordingDevices();
 
 		/**
-		 * Gets the distance model used for attenuation.
-		 * @return Distance model.
+		 * Gets the distance attenuation model. The default is 'INVERSE_CLAMPED'.
+		 * @return The current distance model.
 		 */
 		static DistanceModel getDistanceModel();
 
 		/**
-		 * Sets the distance model used for attenuation.
-		 * @param distanceModel Distance model.
+		 * Sets the distance attenuation model.
+		 * @param distanceModel The new distance model.
 		 */
 		static void setDistanceModel(DistanceModel distanceModel);
 
 		/**
-		 * Sets scene EFX effect.
-		 * @param name Effect name to use.
-		 * @param params Effect description table.
-		 * @return true if successful, false otherwise.
+		 * Defines an effect that can be applied to a Source.
+		 * @note Not all system supports audio effects. Use isEffectsSupported to check.
+		 * @param name Name of the effect.
+		 * @param params The parameters to use for the effect.
+		 * @return Whether the effect was successfully created.
 		 */
 		static bool setEffect(const std::string& name, const Effect::ParamMap& params);
 
 		/**
-		 * Removes scene EFX effect.
-		 * @param name Effect name to clear.
-		 * @return true if successful, false otherwise.
+		 * Removes the specific effect.
+		 * @param name Name of the effect.
+		 * @return Whether the effect was successfully removed.
 		 */
 		static bool removeEffect(const std::string& name);
 
 		/**
-		 * Gets scene EFX effect.
-		 * @param name Effect name to get data from.
-		 * @return Effect description table.
+		 * Gets parameters of the specific effect.
+		 * @param name Name of the effect.
+		 * @return Effect parameters.
 		 */
 		static Effect::ParamMap getEffect(const std::string& name);
 
 		/**
-		 * Gets list of EFX effect names.
-		 * @return List of EFX names to fill.
+		 * Gets a list of the names of the currently enabled effects.
+		 * @return The list of the names of the currently enabled effects.
 		 */
 		static std::vector<std::string> getActiveEffects();
 
 		/**
-		 * Gets maximum number of scene EFX effects.
-		 * @return number of effects.
+		 * Gets maximum number of active effects supported by the system.
+		 * @return The maximum number of active effects.
 		 */
 		static int getMaxEffectCount();
 
 		/**
-		 * Gets maximum number of source EFX effects.
-		 * @return number of effects.
+		 * Gets maximum number of active Effects in a single Source.
+		 * @note This function return 0 for system that doesn't support audio effects.
+		 * @return The maximum number of active Effects per Source.
 		 */
 		static int getMaxSourceEffectCount();
 
 		/**
-		 * Gets EFX (or analog) availability.
-		 * @return true if supported.
+		 * Gets whether audio effects are supported in the system.
+		 * @note Older Linux distributions that ship with older OpenAL library may not support audio effects.
+		 * Furthermore, iOS doesn't support audio effects.
+		 * @return True if effects are supported, false otherwise.
 		 */
 		static bool isEffectSupported();
-
-		/**
-		 * Sets whether audio from other apps mixes with love.audio or is muted,
-		 * on supported platforms.
-		 **/
-		//static bool setMixWithSystem(bool mix);
 
 		static bool getEffectID(const std::string& name, ALuint &id);
 

@@ -86,7 +86,7 @@ bool DecoderWav::init(Stream* src)
 		audioInfo.bytesPerFrame = wavHeader.frame_size;
 
 		auto bit_depth = wavHeader.bit_depth;
-		CC_ASSERT(sourceInfo.channelCount*bit_depth / 8 == wavHeader.frame_size);
+		CC_ASSERT(audioInfo.channelCount*bit_depth / 8 == wavHeader.frame_size);
 		if (bit_depth != 16) {
 			// todo: not implemented
 			msg = "only support 16bit format, got " + std::to_string(bit_depth) + "bit"; break;

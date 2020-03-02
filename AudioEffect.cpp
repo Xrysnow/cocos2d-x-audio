@@ -333,7 +333,7 @@ int Effect::getValue(Parameter in, int def) const
 }
 
 
-std::unordered_map<Effect::Phoneme, ALint> Effect::phonemeMap =
+std::map<Effect::Phoneme, ALint> Effect::phonemeMap =
 {
 	{Effect::Phoneme::A, AL_VOCAL_MORPHER_PHONEME_A},
 	{Effect::Phoneme::E, AL_VOCAL_MORPHER_PHONEME_E},

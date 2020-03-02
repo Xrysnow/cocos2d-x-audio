@@ -2,7 +2,6 @@
 #include "ALHeader.h"
 #include "base/CCRef.h"
 #include <map>
-#include <unordered_map>
 
 namespace audio
 {
@@ -252,6 +251,6 @@ namespace audio
 		Type type;
 		ALuint effect = AL_EFFECT_NULL;
 		ParamMap params;
-		static std::unordered_map<Phoneme, ALint> phonemeMap;
+		static std::map<Phoneme, ALint> phonemeMap;
 	};	
 }

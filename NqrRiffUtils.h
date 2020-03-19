@@ -26,8 +26,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RIFF_UTILS_H
 #define RIFF_UTILS_H
 
-#include "Common.h"
-#include "Dither.h"
+#include "NqrCommon.h"
+#include "NqrDither.h"
 
 namespace nqr
 {

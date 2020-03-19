@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 
 //#include "PostProcess.h"
-#include "Dither.h"
+#include "NqrDither.h"
 
 namespace nqr
 {

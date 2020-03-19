@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "ALHeader.h"
+#include "AudioCommon.h"
 #include "base/CCRef.h"
 #include <map>
 

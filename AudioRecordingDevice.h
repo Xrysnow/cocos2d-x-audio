@@ -1,7 +1,6 @@
 ﻿#pragma once
-#include "AudioMacros.h"
 #include "AudioSoundData.h"
-#include "ALHeader.h"
+#include "AudioCommon.h"
 #include "base/CCRef.h"
 #include <string>
 

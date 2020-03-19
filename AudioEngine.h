@@ -1,11 +1,10 @@
 ﻿#pragma once
-#include "AudioMacros.h"
 #include "AudioSource.h"
 #include "AudioEffect.h"
 #include "AudioPool.h"
 #include "AudioDecoder.h"
 #include "AudioRecordingDevice.h"
-#include "ALHeader.h"
+#include "base/CCVector.h"
 #include <vector>
 #include <stack>
 #include <array>

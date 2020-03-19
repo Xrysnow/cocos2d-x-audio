@@ -1,12 +1,12 @@
 ﻿#pragma once
 #include "AudioPool.h"
 #include "AudioFilter.h"
-#include "AudioEffect.h"
-#include "AudioMacros.h"
-#include "ALHeader.h"
+#include "AudioCommon.h"
 #include "base/CCRef.h"
+#include "math/Vec3.h"
 #include <array>
 #include <limits>
+#include <stack>
 
 namespace audio
 {

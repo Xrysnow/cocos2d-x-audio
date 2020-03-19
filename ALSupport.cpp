@@ -1,5 +1,4 @@
 ﻿#include "ALSupport.h"
-#include "AudioMacros.h"
 #include <unordered_map>
 
 using namespace std;
@@ -136,13 +135,13 @@ void GetDeviceNames()
 {
 	if (!_has_ALC_ENUMERATE_ALL_EXT)
 	{
-		ALOGI("ALC_ENUMERATE_ALL_EXT is not supported");
+		AINFO("ALC_ENUMERATE_ALL_EXT is not supported");
 		return;
 	}
 	const ALCchar *defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
 	if (!defaultDeviceName)
 	{
-		ALOGI("Cannot get default device name");
+		AINFO("Cannot get default device name");
 	}
 	else
 	{
@@ -153,7 +152,7 @@ void GetDeviceNames()
 	const ALCchar *devices = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
 	if (!devices)
 	{
-		ALOGI("Cannot get devices");
+		AINFO("Cannot get devices");
 	}
 	else
 	{

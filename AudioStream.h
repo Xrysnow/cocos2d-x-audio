@@ -30,6 +30,8 @@ namespace audio
 
 		virtual ~Stream() = default;
 
+		// note: the following functions should be implemented in your engine
+
 		static Stream* createFromFile(const std::string& path);
 		static Stream* createFromLocalFile(const std::string& path);
 		static Stream* createFromStringData(const std::string& str);

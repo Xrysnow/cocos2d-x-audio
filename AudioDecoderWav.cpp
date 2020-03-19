@@ -1,6 +1,5 @@
 ﻿#include "AudioDecoderWav.h"
-#include "RiffUtils.h"
-#include "IMA4Util.h"
+#include "NqrRiffUtils.h"
 
 using namespace nqr;
 using namespace audio;

@@ -1,8 +1,9 @@
 ﻿#pragma once
-#include "AudioMacros.h"
-#include "ALHeader.h"
+#include "AudioCommon.h"
 #include <vector>
 #include <mutex>
+#include <queue>
+#include <map>
 
 namespace audio
 {

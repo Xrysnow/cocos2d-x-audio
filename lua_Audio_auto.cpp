@@ -1,8 +1,7 @@
-#include "lua_Audio_auto.hpp"
+#include "lua_audio_auto.hpp"
 #include "AudioEngine.h"
 #include "scripting/lua-bindings/manual/tolua_fix.h"
 #include "scripting/lua-bindings/manual/LuaBasicConversions.h"
-#include "../LSTG/UtilLuaConversion.h"
 
 int lua_x_Audio_Source_getVolume(lua_State* tolua_S)
 {
@@ -555,7 +554,7 @@ int lua_x_Audio_Source_setEffect(lua_State* tolua_S)
 
             if (!ok) { break; }
             std::map<audio::Filter::Parameter, float> arg1;
-            ok &= lstg::lua::luaval_to_native(tolua_S, 3, &arg1, "audio.Source:setEffect");
+            ok &= audio::lua::luaval_to_native(tolua_S, 3, &arg1, "audio.Source:setEffect");
 
             if (!ok) { break; }
             bool ret = cobj->setEffect(arg0, arg1);
@@ -764,7 +763,7 @@ int lua_x_Audio_Source_getCone(lua_State* tolua_S)
             return 0;
         }
         std::array<float, 4> ret = cobj->getCone();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "audio.Source:getCone",argc, 0);
@@ -1390,7 +1389,7 @@ int lua_x_Audio_Source_getFilter(lua_State* tolua_S)
             return 0;
         }
         std::map<audio::Filter::Parameter, float> ret = cobj->getFilter();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "audio.Source:getFilter",argc, 0);
@@ -1534,7 +1533,7 @@ int lua_x_Audio_Source_clone(lua_State* tolua_S)
             return 0;
         }
         audio::Source* ret = cobj->clone();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "audio.Source:clone",argc, 0);
@@ -1919,7 +1918,7 @@ int lua_x_Audio_Source_getEffect(lua_State* tolua_S)
             return 0;
         }
         std::map<audio::Filter::Parameter, float> ret = cobj->getEffect(arg0);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "audio.Source:getEffect",argc, 1);
@@ -2059,7 +2058,7 @@ int lua_x_Audio_Source_setFilter(lua_State* tolua_S)
     {
         std::map<audio::Filter::Parameter, float> arg0;
 
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:setFilter");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:setFilter");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Source_setFilter'", nullptr);
@@ -2394,7 +2393,7 @@ int lua_x_Audio_Source_queue(lua_State* tolua_S)
     {
         audio::SoundData* arg0;
 
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:queue");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:queue");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Source_queue'", nullptr);
@@ -2409,7 +2408,7 @@ int lua_x_Audio_Source_queue(lua_State* tolua_S)
         audio::SoundData* arg0;
         ssize_t arg1;
 
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:queue");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:queue");
 
         ok &= luaval_to_ssize(tolua_S, 3, &arg1, "audio.Source:queue");
         if(!ok)
@@ -2427,7 +2426,7 @@ int lua_x_Audio_Source_queue(lua_State* tolua_S)
         ssize_t arg1;
         ssize_t arg2;
 
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:queue");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:queue");
 
         ok &= luaval_to_ssize(tolua_S, 3, &arg1, "audio.Source:queue");
 
@@ -2572,7 +2571,7 @@ int lua_x_Audio_Source_setCone(lua_State* tolua_S)
     do{
         if (argc == 1) {
             std::array<float, 4> arg0;
-            ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "setCone");
+            ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "setCone");
 
             if (!ok) { break; }
             cobj->setCone(arg0);
@@ -2880,7 +2879,7 @@ int lua_x_Audio_Source_pauseBatch(lua_State* tolua_S)
     if (argc == 1)
     {
         std::vector<audio::Source *> arg0;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:pauseBatch");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:pauseBatch");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Source_pauseBatch'", nullptr);
@@ -2916,7 +2915,7 @@ int lua_x_Audio_Source_playBatch(lua_State* tolua_S)
     if (argc == 1)
     {
         std::vector<audio::Source *> arg0;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:playBatch");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:playBatch");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Source_playBatch'", nullptr);
@@ -2952,14 +2951,14 @@ int lua_x_Audio_Source_createFromDecoder(lua_State* tolua_S)
     if (argc == 1)
     {
         audio::Decoder* arg0;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:createFromDecoder");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:createFromDecoder");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Source_createFromDecoder'", nullptr);
             return 0;
         }
         audio::Source* ret = audio::Source::createFromDecoder(arg0);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Source:createFromDecoder",argc, 1);
@@ -2988,14 +2987,14 @@ int lua_x_Audio_Source_createFromSoundData(lua_State* tolua_S)
     if (argc == 1)
     {
         audio::SoundData* arg0;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:createFromSoundData");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:createFromSoundData");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Source_createFromSoundData'", nullptr);
             return 0;
         }
         audio::Source* ret = audio::Source::createFromSoundData(arg0);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Source:createFromSoundData",argc, 1);
@@ -3024,7 +3023,7 @@ int lua_x_Audio_Source_stopBatch(lua_State* tolua_S)
     if (argc == 1)
     {
         std::vector<audio::Source *> arg0;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:stopBatch");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Source:stopBatch");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Source_stopBatch'", nullptr);
@@ -3065,7 +3064,7 @@ int lua_x_Audio_Source_pauseAll(lua_State* tolua_S)
             return 0;
         }
         std::vector<audio::Source *> ret = audio::Source::pauseAll();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Source:pauseAll",argc, 0);
@@ -3107,7 +3106,7 @@ int lua_x_Audio_Source_create(lua_State* tolua_S)
             return 0;
         }
         audio::Source* ret = audio::Source::create(arg0, arg1, arg2, arg3);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Source:create",argc, 4);
@@ -3503,7 +3502,7 @@ int lua_x_Audio_Stream_createFromFile(lua_State* tolua_S)
             return 0;
         }
         audio::Stream* ret = audio::Stream::createFromFile(arg0);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Stream:createFromFile",argc, 1);
@@ -3539,7 +3538,7 @@ int lua_x_Audio_Stream_createFromLocalFile(lua_State* tolua_S)
             return 0;
         }
         audio::Stream* ret = audio::Stream::createFromLocalFile(arg0);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Stream:createFromLocalFile",argc, 1);
@@ -3568,14 +3567,14 @@ int lua_x_Audio_Stream_createFromSoundData(lua_State* tolua_S)
     if (argc == 1)
     {
         audio::SoundData* arg0;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Stream:createFromSoundData");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Stream:createFromSoundData");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Stream_createFromSoundData'", nullptr);
             return 0;
         }
         audio::Stream* ret = audio::Stream::createFromSoundData(arg0);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Stream:createFromSoundData",argc, 1);
@@ -3611,7 +3610,7 @@ int lua_x_Audio_Stream_createFromStringData(lua_State* tolua_S)
             return 0;
         }
         audio::Stream* ret = audio::Stream::createFromStringData(arg0);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Stream:createFromStringData",argc, 1);
@@ -3828,7 +3827,7 @@ int lua_x_Audio_Decoder_clone(lua_State* tolua_S)
             return 0;
         }
         audio::Decoder* ret = cobj->clone();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "audio.Decoder:clone",argc, 0);
@@ -4435,7 +4434,7 @@ int lua_x_Audio_Decoder_createFromFile(lua_State* tolua_S)
             return 0;
         }
         audio::Decoder* ret = audio::Decoder::createFromFile(arg0, arg1);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     if (argc == 3)
@@ -4452,7 +4451,7 @@ int lua_x_Audio_Decoder_createFromFile(lua_State* tolua_S)
             return 0;
         }
         audio::Decoder* ret = audio::Decoder::createFromFile(arg0, arg1, arg2);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Decoder:createFromFile",argc, 2);
@@ -4483,7 +4482,7 @@ int lua_x_Audio_Decoder_createFromSoundData(lua_State* tolua_S)
         audio::SoundData* arg0;
         unsigned int arg1;
         audio::Decoder::DecoderType arg2;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Decoder:createFromSoundData");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Decoder:createFromSoundData");
         ok &= luaval_to_uint32(tolua_S, 3,&arg1, "audio.Decoder:createFromSoundData");
         ok &= luaval_to_int32(tolua_S, 4,(int *)&arg2, "audio.Decoder:createFromSoundData");
         if(!ok)
@@ -4492,7 +4491,7 @@ int lua_x_Audio_Decoder_createFromSoundData(lua_State* tolua_S)
             return 0;
         }
         audio::Decoder* ret = audio::Decoder::createFromSoundData(arg0, arg1, arg2);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Decoder:createFromSoundData",argc, 3);
@@ -4532,7 +4531,7 @@ int lua_x_Audio_Decoder_createFromStringData(lua_State* tolua_S)
             return 0;
         }
         audio::Decoder* ret = audio::Decoder::createFromStringData(arg0, arg1, arg2);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Decoder:createFromStringData",argc, 3);
@@ -4606,7 +4605,7 @@ int lua_x_Audio_Decoder_createFromLocalFile(lua_State* tolua_S)
             return 0;
         }
         audio::Decoder* ret = audio::Decoder::createFromLocalFile(arg0, arg1);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     if (argc == 3)
@@ -4623,7 +4622,7 @@ int lua_x_Audio_Decoder_createFromLocalFile(lua_State* tolua_S)
             return 0;
         }
         audio::Decoder* ret = audio::Decoder::createFromLocalFile(arg0, arg1, arg2);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Decoder:createFromLocalFile",argc, 2);
@@ -4654,7 +4653,7 @@ int lua_x_Audio_Decoder_createFromStream(lua_State* tolua_S)
         audio::Stream* arg0;
         unsigned int arg1;
         audio::Decoder::DecoderType arg2;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Decoder:createFromStream");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Decoder:createFromStream");
         ok &= luaval_to_uint32(tolua_S, 3,&arg1, "audio.Decoder:createFromStream");
         ok &= luaval_to_int32(tolua_S, 4,(int *)&arg2, "audio.Decoder:createFromStream");
         if(!ok)
@@ -4663,7 +4662,7 @@ int lua_x_Audio_Decoder_createFromStream(lua_State* tolua_S)
             return 0;
         }
         audio::Decoder* ret = audio::Decoder::createFromStream(arg0, arg1, arg2);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Decoder:createFromStream",argc, 3);
@@ -4855,7 +4854,7 @@ int lua_x_Audio_SoundData_clone(lua_State* tolua_S)
             return 0;
         }
         audio::SoundData* ret = cobj->clone();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "audio.SoundData:clone",argc, 0);
@@ -5668,7 +5667,7 @@ int lua_x_Audio_RecordingDevice_getData(lua_State* tolua_S)
             return 0;
         }
         audio::SoundData* ret = cobj->getData();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d \n", "audio.RecordingDevice:getData",argc, 0);
@@ -5848,7 +5847,7 @@ int lua_x_Audio_Engine_getOrientation(lua_State* tolua_S)
             return 0;
         }
         std::array<cocos2d::Vec3, 2> ret = audio::Engine::getOrientation();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Engine:getOrientation",argc, 0);
@@ -5983,7 +5982,7 @@ int lua_x_Audio_Engine_setEffect(lua_State* tolua_S)
         std::string arg0;
         std::map<audio::Effect::Parameter, float> arg1;
         ok &= luaval_to_std_string(tolua_S, 2,&arg0, "audio.Engine:setEffect");
-        ok &= lstg::lua::luaval_to_native(tolua_S, 3, &arg1, "audio.Engine:setEffect");
+        ok &= audio::lua::luaval_to_native(tolua_S, 3, &arg1, "audio.Engine:setEffect");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Engine_setEffect'", nullptr);
@@ -6020,7 +6019,7 @@ int lua_x_Audio_Engine_pause(lua_State* tolua_S)
         if (argc == 0)
         {
             std::vector<audio::Source *> ret = audio::Engine::pause();
-            lstg::lua::native_to_luaval(tolua_S, ret);
+            audio::lua::native_to_luaval(tolua_S, ret);
             return 1;
         }
     } while (0);
@@ -6030,7 +6029,7 @@ int lua_x_Audio_Engine_pause(lua_State* tolua_S)
         if (argc == 1)
         {
             std::vector<audio::Source *> arg0;
-            ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Engine:pause");
+            ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Engine:pause");
             if (!ok) { break; }
             audio::Engine::pause(arg0);
             lua_settop(tolua_S, 1);
@@ -6270,7 +6269,7 @@ int lua_x_Audio_Engine_play(lua_State* tolua_S)
     if (argc == 1)
     {
         std::vector<audio::Source *> arg0;
-        ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Engine:play");
+        ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Engine:play");
         if(!ok)
         {
             tolua_error(tolua_S,"invalid arguments in function 'lua_x_Audio_Engine_play'", nullptr);
@@ -6385,7 +6384,7 @@ int lua_x_Audio_Engine_stop(lua_State* tolua_S)
         if (argc == 1)
         {
             std::vector<audio::Source *> arg0;
-            ok &= lstg::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Engine:stop");
+            ok &= audio::lua::luaval_to_native(tolua_S, 2, &arg0, "audio.Engine:stop");
             if (!ok) { break; }
             audio::Engine::stop(arg0);
             lua_settop(tolua_S, 1);
@@ -6636,7 +6635,7 @@ int lua_x_Audio_Engine_getRecordingDevices(lua_State* tolua_S)
             return 0;
         }
         std::vector<audio::RecordingDevice *> ret = audio::Engine::getRecordingDevices();
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Engine:getRecordingDevices",argc, 0);
@@ -6672,7 +6671,7 @@ int lua_x_Audio_Engine_getEffect(lua_State* tolua_S)
             return 0;
         }
         std::map<audio::Effect::Parameter, float> ret = audio::Engine::getEffect(arg0);
-        lstg::lua::native_to_luaval(tolua_S, ret);
+        audio::lua::native_to_luaval(tolua_S, ret);
         return 1;
     }
     luaL_error(tolua_S, "%s has wrong number of arguments: %d, was expecting %d\n ", "audio.Engine:getEffect",argc, 1);
@@ -6914,7 +6913,7 @@ int lua_register_x_Audio_Engine(lua_State* tolua_S)
     g_typeCast["Engine"] = "audio.Engine";
     return 1;
 }
-TOLUA_API int register_all_x_Audio(lua_State* tolua_S)
+TOLUA_API int register_all_cc_audio(lua_State* tolua_S)
 {
 	tolua_open(tolua_S);
 	

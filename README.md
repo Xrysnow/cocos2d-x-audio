@@ -1,7 +1,8 @@
-# lstgx_Audio
+# cococs2d-x-audio
 
-Audio support of [LuaSTG-x](https://github.com/Xrysnow/LuaSTG-x).
-This project is based on audio engine of [love](https://love2d.org/) and uses codes from following projects:
+This project is a multi-platform audio engine for [cocos2d-x](https://github.com/cocos2d/cocos2d-x).
+
+It based on audio engine of [LÖVE](https://love2d.org) and uses codes from following projects:
 
 * [Libnyquist](https://github.com/ddiakopoulos/libnyquist)
 * [dr_libs](https://github.com/mackron/dr_libs)

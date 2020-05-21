@@ -513,8 +513,6 @@ bool Engine::init()
 	pool = Pool::getInstance();
 	if(!pool)
 	{
-		//for (auto c : capture)
-		//	delete c;
 		capture.clear();
 
 #ifdef ALC_EXT_EFX
@@ -549,7 +547,7 @@ void Engine::end()
 	capture.clear();
 
 #ifdef ALC_EXT_EFX
-	for (auto e : effectmap)
+	for (auto& e : effectmap)
 	{
 		delete e.second.effect;
 		slotlist.push(e.second.slot);

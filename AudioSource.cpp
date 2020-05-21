@@ -54,7 +54,7 @@ bool Source::initWithSoundData(SoundData* soundData)
 	velocity.setZero();
 	direction.setZero();
 
-	for (unsigned int i = 0; i < (unsigned int)Engine::getMaxSourceEffectCount(); i++)
+	for (int i = 0; i < Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
 	return true;
 }
@@ -104,7 +104,7 @@ bool Source::initWithDecoder(Decoder* _decoder)
 	velocity.setZero();
 	direction.setZero();
 
-	for (unsigned int i = 0; i < (unsigned int)Engine::getMaxSourceEffectCount(); i++)
+	for (int i = 0; i < Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
 	return true;
 }
@@ -148,7 +148,7 @@ bool Source::init(int _sampleRate, int _bitDepth, int _channels, int _buffers)
 	velocity.setZero();
 	direction.setZero();
 
-	for (unsigned int i = 0; i < (unsigned int)Engine::getMaxSourceEffectCount(); i++)
+	for (int i = 0; i < Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
 	return true;
 }
@@ -215,7 +215,7 @@ bool Source::initWithOther(const Source &s)
 	velocity.setZero();
 	direction.setZero();
 
-	for (unsigned int i = 0; i < (unsigned int)Engine::getMaxSourceEffectCount(); i++)
+	for (int i = 0; i < Engine::getMaxSourceEffectCount(); i++)
 	{
 		// filter out already taken slots
 		bool push = true;
@@ -444,7 +444,7 @@ bool Source::update()
 		alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
 		alSourceUnqueueBuffers(source, processed, buffers);
 
-		for (unsigned int i = 0; i < (unsigned int)processed; i++)
+		for (int i = 0; i < processed; i++)
 		{
 			ALint size;
 			alGetBufferi(buffers[i], AL_SIZE, &size);

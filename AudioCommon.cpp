@@ -7,6 +7,9 @@ using namespace audio;
 namespace
 {
 	std::function<void(const std::string&)> AudioLoggingFunction;
+	std::function<bool()> AudioRequestRecordPermissionFunction;
+	enum class RecordPermissionState { UNKNOWN, GRANTED, DENIED };
+	RecordPermissionState AudioRecordPermissionState = RecordPermissionState::UNKNOWN;
 }
 
 void audio::setLoggingFunction(const std::function<void(const std::string&)>& callback)
@@ -68,4 +71,24 @@ const char* audio::getErrorString(int errorCode)
 	case AL_OUT_OF_MEMORY: return "out of memory";
 	default: return "unknown error";
 	}
+}
+
+void audio::setOnRequestRecordPermission(const std::function<bool()>& callback)
+{
+	AudioRequestRecordPermissionFunction = callback;
+}
+
+bool audio::requestRecordAudioPermission()
+{
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+	if (AudioRecordPermissionState != RecordPermissionState::UNKNOWN)
+		return AudioRecordPermissionState == RecordPermissionState::GRANTED;
+	if (AudioRequestRecordPermissionFunction)
+	{
+		const auto ret = AudioRequestRecordPermissionFunction();
+		AudioRecordPermissionState = ret ? RecordPermissionState::GRANTED : RecordPermissionState::DENIED;
+		return ret;
+	}
+#endif
+	return true;
 }

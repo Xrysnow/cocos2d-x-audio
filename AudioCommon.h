@@ -8,6 +8,9 @@ namespace audio
 	void setLoggingFunction(const std::function<void(const std::string&)>& callback);
 	void logging(const char* format, ...);
 	const char* getErrorString(int errorCode);
+
+	void setOnRequestRecordPermission(const std::function<bool()>& callback);
+	bool requestRecordAudioPermission();
 }
 
 #define AINFO(_str, ...) audio::logging("[AINFO] [%s] " _str, __FUNCTION__, ##__VA_ARGS__)

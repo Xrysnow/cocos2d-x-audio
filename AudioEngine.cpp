@@ -247,6 +247,9 @@ void Engine::setDistanceModel(DistanceModel distanceModel_)
 
 std::vector<RecordingDevice*> Engine::getRecordingDevices()
 {
+	if (!requestRecordAudioPermission())
+		return {};
+	
 	std::vector<std::string> devnames;
 	cocos2d::Vector<RecordingDevice*> devices;
 
@@ -454,6 +457,9 @@ void Engine::onEnterForeground()
 
 bool Engine::init()
 {
+	// Check permission before opening new device
+	requestRecordAudioPermission();
+
 	// Passing null for default device.
 	device = alcOpenDevice(nullptr);
 

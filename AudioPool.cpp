@@ -147,7 +147,6 @@ bool Pool::assignSource(Source *source, ALuint &out, char &wasPlaying)
 	available.pop();
 
 	playing.insert(std::make_pair(source, out));
-	source->retain();
 	return true;
 }
 

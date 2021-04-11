@@ -10,7 +10,7 @@ namespace audio
 		bool init(Stream* src);
 	public:
 
-		static DecoderWav* create(Stream* src, size_t bufferSize);
+		static DecoderWav* create(Stream* src, size_t bufSize);
 
 		int64_t decode(char* dst, uint64_t bytesToRead) override;
 		bool seek(int64_t frameOffset) override;

@@ -168,16 +168,16 @@ bool DecoderWav::init(Stream* src)
 	stream->unlock();
 	if (tempBuffer)
 		free(tempBuffer);
-	//if (!msg.empty())
-	//{
-	//	AINFO("[AudioDecoderWav::open] %s", msg.c_str());
-	//}
+	if (!msg.empty())
+	{
+		AINFO("%s", msg.c_str());
+	}
 	return ret;
 }
 
-DecoderWav* DecoderWav::create(Stream* src, size_t bufferSize)
+DecoderWav* DecoderWav::create(Stream* src, size_t bufSize)
 {
-	auto ret = new (std::nothrow) DecoderWav(bufferSize);
+	auto ret = new (std::nothrow) DecoderWav(bufSize);
 	if (ret&&ret->init(src))
 	{
 		ret->autorelease();

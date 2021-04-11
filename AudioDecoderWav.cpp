@@ -1,4 +1,5 @@
-﻿#include "AudioDecoderWav.h"
+﻿#include "AudioCommon.h"
+#include "AudioDecoderWav.h"
 #include "NqrRiffUtils.h"
 
 using namespace nqr;

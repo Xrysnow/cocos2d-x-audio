@@ -155,7 +155,7 @@ bool DecoderWav::init(Stream* src)
 		// note: there may be some info at file tail, only use data_size
 		if (data_size != stream->size() - data_offset)
 		{
-			msg = "data size mismatch. expect " + std::to_string(data_size) +
+			msg = "data size mismatch: expect " + std::to_string(data_size) +
 				", got " + std::to_string(stream->size() - data_offset);
 			data_size = std::min(data_size, uint32_t(stream->size() - data_offset));
 		}

@@ -81,6 +81,12 @@ if(BUILD_LUA_LIBS)
     target_compile_definitions(${LIB_NAME} PUBLIC _USRLUASTATIC)
 endif()
 
+if(ALSOFT_OPENAL_LIBRARY)
+    #target_link_libraries(${LIB_NAME} ${ALSOFT_OPENAL_LIBRARY})
+    #set_target_properties(${LIB_NAME} PROPERTIES XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS ${ALSOFT_FRAMEWORK_PATH})
+    target_include_directories(${LIB_NAME} PUBLIC ALSOFT_INCLUDE_DIR)
+endif()
+
 set_target_properties(${LIB_NAME}
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"

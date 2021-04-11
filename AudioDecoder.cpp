@@ -4,6 +4,7 @@
 #include "AudioDecoderVorbis.h"
 #include "AudioDecoderFlac.h"
 #include "AudioDecoderMp3.h"
+#include "AudioCommon.h"
 #include "cocos2d.h"
 #include <algorithm>
 #include <cctype>
@@ -16,6 +17,13 @@ static std::unordered_map<std::string, Decoder::DecoderType> DecoderTypeMap = {
 	{"flac", Decoder::DecoderType::FLAC},
 	{"mp3", Decoder::DecoderType::MP3},
 };
+
+std::string Decoder::AudioInfo::toString()
+{
+	return string_format("Frame: %d, Freq: %d, Time: %.3f, Channel: %d, BitDepth: %d",
+		(int)totalFrames, (int)sampleRate, (float)getTotalTime(),
+		(int)channelCount, (int)getBitDepth());
+}
 
 Decoder::Decoder(size_t bufferSize, DecoderType type)
 	: decoderType(type)

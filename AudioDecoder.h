@@ -38,6 +38,7 @@ namespace audio
 			int64_t getBitDepth() const {
 				return bytesPerFrame / channelCount * 8;
 			}
+			std::string toString();
 		};
 
 	protected:

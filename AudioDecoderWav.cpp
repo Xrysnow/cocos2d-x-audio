@@ -215,6 +215,8 @@ bool DecoderWav::seek(int64_t frameOffset)
 	stream->lock();
 	const bool ret = stream->seek(Stream::SeekOrigin::BEGINNING, data_offset + frameOffset * getBytesPerFrame());
 	stream->unlock();
+	if (ret)
+		eof = false;
 	return ret;
 }
 

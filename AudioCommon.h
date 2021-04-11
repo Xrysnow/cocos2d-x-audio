@@ -5,6 +5,7 @@
 
 namespace audio
 {
+	std::string string_format(const char* format, ...);
 	void setLoggingFunction(const std::function<void(const std::string&)>& callback);
 	void logging(const char* format, ...);
 	const char* getErrorString(int errorCode);

@@ -41,7 +41,7 @@ namespace audio
 		/**
 		 * Gets the OpenAL format identifier based on number of
 		 * channels and bits.
-		 * @param channels
+		 * @param channels Number of channels
 		 * @param bitDepth Either 8-bit samples, or 16-bit samples.
 		 * @return One of AL_FORMAT_*, or AL_NONE if unsupported format.
 		 */
@@ -272,8 +272,6 @@ namespace audio
 
 		static std::string lastError;
 	};
-
-	std::string string_format(const char* format, ...);
 
 #ifdef ALC_EXT_EFX
 	// Effect objects

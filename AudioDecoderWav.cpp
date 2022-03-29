@@ -1,6 +1,7 @@
 ﻿#include "AudioCommon.h"
 #include "AudioDecoderWav.h"
 #include "NqrRiffUtils.h"
+#include <algorithm>
 
 using namespace nqr;
 using namespace audio;
@@ -48,20 +49,28 @@ bool DecoderWav::init(Stream* src)
 		// Check RIFF
 		if (riffHeader.id_riff != CKC_RIFF) {
 			if (riffHeader.id_riff == CKC_RIFX || riffHeader.id_riff == CKC_FFIR) {
-				msg = "doesn't support big endian file"; break;
+				msg = "doesn't support big endian file";
+				break;
 			}
-			msg = "bad RIFF/RIFX/FFIR file header"; break;
+			msg = "bad RIFF/RIFX/FFIR file header";
+			break;
 		}
 
 		if (riffHeader.id_wave != CKC_WAVE) {
-			msg = "bad WAVE header"; break;
+			msg = "bad WAVE header";
+			break;
 		}
 		auto expectedSize = size - riffHeader.file_size;
 		if (expectedSize != sizeof(uint32_t) * 2) {
-			msg = "declared size of file dosn't match real size"; break;
+			msg = "declared size of file dosn't match real size";
+			break;
 		}
 		// note: assume that header is smaller than 256B
 		tempBuffer = (uint8_t*)malloc(256);
+		if (!tempBuffer) {
+			msg = "failed to allocate temperary buffer";
+			break;
+		}
 		uint64_t bufferLength;
 		stream->seek(Stream::SeekOrigin::BEGINNING, 0);
 		stream->read(tempBuffer, 256, &bufferLength);
@@ -69,7 +78,8 @@ bool DecoderWav::init(Stream* src)
 		// Read WAVE Header
 		auto WaveChunkInfo = ScanForChunk(tempBuffer, bufferLength, CKC_fmt_);
 		if (WaveChunkInfo.offset == 0) {
-			msg = "couldn't find fmt chunk"; break;
+			msg = "couldn't find fmt chunk";
+			break;
 		}
 		CC_ASSERT(WaveChunkInfo.size == 16 || WaveChunkInfo.size == 18 ||
 			WaveChunkInfo.size == 20 || WaveChunkInfo.size == 40);
@@ -77,7 +87,8 @@ bool DecoderWav::init(Stream* src)
 		memcpy(&wavHeader, tempBuffer + WaveChunkInfo.offset, sizeof(WaveChunkHeader));
 
 		if (wavHeader.chunk_size < 16) {
-			msg = "format chunk too small"; break;
+			msg = "format chunk too small";
+			break;
 		}
 		//TODO: validate wav header (sane sample rate, bit depth, etc)
 
@@ -89,7 +100,8 @@ bool DecoderWav::init(Stream* src)
 		CC_ASSERT(audioInfo.channelCount*bit_depth / 8 == wavHeader.frame_size);
 		if (bit_depth != 16) {
 			// todo: not implemented
-			msg = "only support 16bit format, got " + std::to_string(bit_depth) + "bit"; break;
+			msg = "only support 16bit format, got " + std::to_string(bit_depth) + "bit";
+			break;
 		}
 
 		bool scanForFact = false;
@@ -107,7 +119,8 @@ bool DecoderWav::init(Stream* src)
 			//adpcmEncoded = true;
 			//scanForFact = true;
 			// todo: not implemented
-			msg = "not support ADPCM format"; break;
+			msg = "not support ADPCM format";
+			break;
 		}
 		else if (wavHeader.format == FORMAT_EXT)
 		{
@@ -118,7 +131,8 @@ bool DecoderWav::init(Stream* src)
 			grabExtensibleData = true;
 		}
 		else if (wavHeader.format == FORMAT_UNKNOWN) {
-			msg = "unknown wave format"; break;
+			msg = "unknown wave format";
+			break;
 		}
 
 		// Read Additional Chunks
@@ -147,7 +161,8 @@ bool DecoderWav::init(Stream* src)
 		auto DataChunkInfo = ScanForChunk(tempBuffer, bufferLength, CKC_data);
 		if (DataChunkInfo.offset == 0) {
 			msg = "couldn't find data chunk |size=" + std::to_string(stream->size()) +
-				"|temp buf size=" + std::to_string(bufferLength); break;
+				"|temp buf size=" + std::to_string(bufferLength);
+			break;
 		}
 		uint32_t data_size;
 		memcpy(&data_size, tempBuffer + DataChunkInfo.offset + sizeof(uint32_t), sizeof(uint32_t));
@@ -223,8 +238,8 @@ bool DecoderWav::seek(int64_t frameOffset)
 
 int64_t DecoderWav::tell()
 {
-	int64_t p = (int64_t)stream->tell() - (int64_t)data_offset;
-	return std::max(0LL, p) / getBytesPerFrame();
+	const int64_t p = (int64_t)stream->tell() - (int64_t)data_offset;
+	return std::max<int64_t>(0, p) / getBytesPerFrame();
 }
 
 bool DecoderWav::isSeekable()

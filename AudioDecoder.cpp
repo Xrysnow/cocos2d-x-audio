@@ -118,7 +118,7 @@ int64_t Decoder::decode()
 	const int64_t exceed = tCurSample + tSampleToRead - getLoopEnd();
 	if (exceed > 0)
 		toReadSize -= exceed * getBytesPerFrame();
-	toReadSize = std::max(toReadSize, 0LL);
+	toReadSize = std::max<int64_t>(toReadSize, 0);
 	const int64_t size = decode((char*)buffer, toReadSize);
 	if (size > 0)
 		bufferPosition = tCurSample;

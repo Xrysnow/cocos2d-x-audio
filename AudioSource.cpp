@@ -3,6 +3,7 @@
 #include "AudioDecoder.h"
 #include "AudioEngine.h"
 #include "AudioFilter.h"
+#include <algorithm>
 
 using namespace audio;
 
@@ -1310,15 +1311,15 @@ int Source::streamAtomic(ALuint buffer, Decoder* d)
 {
 	if (!d) return 0;
 	// Get more sound data.
-	int decoded = std::max(d->decode(), 0LL);
+	auto decoded = (ALsizei)std::max<int64_t>(d->decode(), 0);
 
 	// OpenAL implementations are allowed to ignore 0-size alBufferData calls.
 	if (decoded > 0)
 	{
-		const auto fmt = Engine::getFormat(d->getBitDepth(), d->getChannelCount());
+		const auto fmt = Engine::getFormat((int)d->getBitDepth(), (int)d->getChannelCount());
 
 		if (fmt != AL_NONE)
-			alBufferData(buffer, fmt, d->getBuffer(), decoded, d->getSampleRate());
+			alBufferData(buffer, fmt, d->getBuffer(), decoded, (ALsizei)d->getSampleRate());
 		else
 			decoded = 0;
 	}

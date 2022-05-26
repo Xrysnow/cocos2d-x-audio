@@ -117,7 +117,7 @@ int64_t DecoderFlac::decode(char* dst, uint64_t bytesToRead)
 bool DecoderFlac::seek(int64_t frameOffset)
 {
 	stream->lock();
-	const drflac_bool32 result = drflac_seek_to_pcm_frame(flac, (drflac_uint64)frameOffset);
+	const bool result = drflac_seek_to_pcm_frame(flac, (drflac_uint64)frameOffset) == DRFLAC_TRUE;
 	stream->unlock();
 	if (result)
 		eof = false;

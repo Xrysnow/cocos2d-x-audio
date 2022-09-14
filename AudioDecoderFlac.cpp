@@ -78,7 +78,7 @@ bool DecoderFlac::init(Stream* src)
 	stream->lock();
 	stream->seek(Stream::SeekOrigin::BEGINNING, 0);
 	//TODO: metadata
-	flac = drflac_open(flacRead, flacSeek, stream);
+	flac = drflac_open(flacRead, flacSeek, stream, nullptr);
 	stream->unlock();
 	if (!flac)
 		return false;
@@ -86,7 +86,7 @@ bool DecoderFlac::init(Stream* src)
 	//audioInfo.bytesPerFrame = flac->bitsPerSample / 8;
 	audioInfo.bytesPerFrame = 2 * flac->channels;
 	audioInfo.channelCount = flac->channels;
-	audioInfo.totalFrames = flac->totalSampleCount;
+	audioInfo.totalFrames = flac->totalPCMFrameCount;
 	stream->retain();
 	return true;
 }
@@ -126,7 +126,7 @@ bool DecoderFlac::seek(int64_t frameOffset)
 
 int64_t DecoderFlac::tell()
 {
-	return flac->currentSample;
+	return flac->currentPCMFrame;
 }
 
 bool DecoderFlac::isSeekable()

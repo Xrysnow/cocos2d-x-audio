@@ -8,14 +8,6 @@
 
 namespace audio
 {
-	// Struct for handling data
-	struct SOggFile
-	{
-		const char *dataPtr;	// Pointer to the data in memory
-		int64_t dataSize;	// Size of the data
-		int64_t dataRead;	// How much we've read so far
-	};
-
 	class DecoderVorbis : public Decoder
 	{
 		DecoderVorbis(size_t bufferSize);
@@ -31,11 +23,10 @@ namespace audio
 		bool isSeekable() override;
 
 	private:
-		//SOggFile oggFile;				// (see struct)
 		ov_callbacks vorbisCallbacks;	// Callbacks used to read the file from mem
 		OggVorbis_File handle;			// Handle to the file
-		vorbis_info* vorbisInfo = nullptr;		// Info
-		vorbis_comment* vorbisComment = nullptr;	// Comments
-		int endian = 0;						// Endianness
+		vorbis_info* vorbisInfo = nullptr;
+		vorbis_comment* vorbisComment = nullptr;
+		int endian = 0;
 	};
 }

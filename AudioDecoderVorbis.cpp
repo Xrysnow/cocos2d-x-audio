@@ -1,4 +1,5 @@
 ﻿#include "AudioDecoderVorbis.h"
+#include "AudioCommon.h"
 #include <string>
 
 using namespace audio;

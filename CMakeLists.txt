@@ -19,7 +19,7 @@ set(HEADER
     AudioDecoder.h
     AudioDecoderFlac.h
     AudioDecoderMp3.h
-    AudioDecoderVorbis.h
+    AudioDecoderVorbisStb.h
     AudioDecoderWav.h
     AudioEffect.h
     AudioEngine.h
@@ -42,7 +42,7 @@ set(SOURCE
     AudioDecoder.cpp
     AudioDecoderFlac.cpp
     AudioDecoderMp3.cpp
-    AudioDecoderVorbis.cpp
+    AudioDecoderVorbisStb.cpp
     AudioDecoderWav.cpp
     AudioEffect.cpp
     AudioEngine.cpp
@@ -53,7 +53,13 @@ set(SOURCE
     AudioSource.cpp
     NqrCommon.cpp
     NqrRiffUtils.cpp
+    stb_vorbis.c
 )
+
+if(AUDIO_USE_LIBVORBIS)
+    list(APPEND HEADER AudioDecoderVorbis.h)
+    list(APPEND SOURCE AudioDecoderVorbis.cpp)
+endif()
 
 if(BUILD_LUA_LIBS)
     include_directories(
@@ -72,6 +78,10 @@ add_library(${LIB_NAME} STATIC ${SOURCE} ${HEADER})
 add_dependencies(${LIB_NAME} cocos2d)
 use_cocos2dx_compile_define(${LIB_NAME})
 use_cocos2dx_compile_options(${LIB_NAME})
+
+if(AUDIO_USE_LIBVORBIS)
+    target_compile_definitions(${LIB_NAME} PRIVATE AUDIO_USE_LIBVORBIS)
+endif()
 
 if(CC_AUDIO_DEPEND_LIBS)
     target_link_libraries(${LIB_NAME} ${CC_AUDIO_DEPEND_LIBS})

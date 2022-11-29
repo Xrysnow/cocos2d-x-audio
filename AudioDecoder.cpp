@@ -1,7 +1,10 @@
 ﻿#include "AudioDecoder.h"
 #include "AudioStream.h"
 #include "AudioDecoderWav.h"
+#ifdef AUDIO_USE_LIBVORBIS
 #include "AudioDecoderVorbis.h"
+#endif
+#include "AudioDecoderVorbisStb.h"
 #include "AudioDecoderFlac.h"
 #include "AudioDecoderMp3.h"
 #include "AudioCommon.h"
@@ -59,7 +62,11 @@ Decoder* Decoder::createFromStream(Stream* s, size_t bufferSize, DecoderType typ
 	case Decoder::DecoderType::WAV:
 		return DecoderWav::create(s, bufferSize);
 	case Decoder::DecoderType::VORBIS:
+#ifdef AUDIO_USE_LIBVORBIS
 		return DecoderVorbis::create(s, bufferSize);
+#else
+		return DecoderStbVorbis::create(s, bufferSize);
+#endif
 	case Decoder::DecoderType::FLAC:
 		return DecoderFlac::create(s, bufferSize);
 	case Decoder::DecoderType::MP3:
@@ -101,7 +108,7 @@ int8_t* Decoder::getBuffer() const
 
 bool Decoder::seekTime(double seconds)
 {
-	return seek(seconds*getSampleRate());
+	return seek(seconds * getSampleRate());
 }
 
 Decoder* Decoder::clone()

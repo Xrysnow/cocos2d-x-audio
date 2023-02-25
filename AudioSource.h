@@ -196,7 +196,7 @@ namespace audio
 		 * @param outerAngle The outer angle from the Source's direction, in radians.
 		 *  The Source will play at a volume between the normal and outer volumes, if the listener is in between the cones defined by the inner and outer angles.
 		 * @param outerVolume The Source's volume when the listener is outside both the inner and outer cone angles.
-		 * @param outerHighGain 
+		 * @param outerHighGain AL_CONE_OUTER_GAINHF in exf.
 		 */
 		virtual void setCone(float innerAngle, float outerAngle, float outerVolume, float outerHighGain);
 		virtual void setCone(const std::array<float, 4>& param);

@@ -2,8 +2,13 @@
 #include "AudioDecoder.h"
 #include "AudioStream.h"
 #define OV_EXCLUDE_STATIC_CALLBACKS
+#ifdef CC_VERSION
+#include "../../external/ogg/include/vorbis/codec.h"
+#include "../../external/ogg/include/vorbis/vorbisfile.h"
+#else
 #include "../../external/OggDecoder/include/vorbis/codec.h"
 #include "../../external/OggDecoder/include/vorbis/vorbisfile.h"
+#endif // CC_VERSION
 #include <cstdint>
 
 namespace audio

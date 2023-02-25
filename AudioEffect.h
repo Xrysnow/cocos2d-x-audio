@@ -2,6 +2,9 @@
 #include "AudioCommon.h"
 #include "base/CCRef.h"
 #include <map>
+#ifdef ECHO
+#undef ECHO
+#endif
 
 namespace audio
 {

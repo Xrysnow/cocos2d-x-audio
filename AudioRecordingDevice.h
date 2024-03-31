@@ -13,10 +13,10 @@ namespace audio
 	{
 	public:
 
-		static const int DEFAULT_SAMPLES = 8192;
-		static const int DEFAULT_SAMPLE_RATE = 8000;
-		static const int DEFAULT_BIT_DEPTH = 16;
-		static const int DEFAULT_CHANNELS = 1;
+		static constexpr int DEFAULT_SAMPLES = 8192;
+		static constexpr int DEFAULT_SAMPLE_RATE = 8000;
+		static constexpr int DEFAULT_BIT_DEPTH = 16;
+		static constexpr int DEFAULT_CHANNELS = 1;
 
 	protected:
 		friend class Engine;

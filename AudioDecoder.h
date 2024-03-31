@@ -58,22 +58,22 @@ namespace audio
 		 * Indicates how many bytes of raw data should be generated at each
 		 * call to Decode.
 		 **/
-		static const int DEFAULT_BUFFER_SIZE = 16384;
+		static constexpr int DEFAULT_BUFFER_SIZE = 16384;
 
 		/**
 		 * Indicates the quality of the sound.
 		 **/
-		static const int DEFAULT_SAMPLE_RATE = 44100;
+		static constexpr int DEFAULT_SAMPLE_RATE = 44100;
 
 		/**
 		 * Default is stereo.
 		 **/
-		static const int DEFAULT_CHANNELS = 2;
+		static constexpr int DEFAULT_CHANNELS = 2;
 
 		/**
 		 * 16 bit audio is the default.
 		 **/
-		static const int DEFAULT_BIT_DEPTH = 16;
+		static constexpr int DEFAULT_BIT_DEPTH = 16;
 
 		/**
 		 * Creates a deep of itself. The sound stream can (and should) be

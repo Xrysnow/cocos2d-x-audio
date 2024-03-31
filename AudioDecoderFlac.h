@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "AudioDecoder.h"
-#include "cocos2d.h"
+#include "ccMacros.h"
 #if CC_64BITS
 #define DRFLAC_64BIT
 #endif

@@ -1,5 +1,8 @@
 ﻿#include "AudioEffect.h"
 #include "AudioEngine.h"
+#ifdef ECHO
+#undef ECHO
+#endif
 
 using namespace audio;
 

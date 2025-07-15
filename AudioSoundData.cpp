@@ -145,8 +145,8 @@ void SoundData::load(int samples, int sampleRate, int bitDepth, int channels, vo
 	this->channels = channels;
 
 	double realsize = samples;
-	realsize *= (bitDepth / 8) * channels;
-	if (realsize > std::numeric_limits<size_t>::max())
+	realsize *= (double)bitDepth / 8 * channels;
+	if (realsize > (double)std::numeric_limits<size_t>::max())
 	{
 		Exception("Data is too big!");
 	}

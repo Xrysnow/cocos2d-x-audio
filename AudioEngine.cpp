@@ -517,7 +517,7 @@ bool Engine::init()
 #endif
 
 	pool = Pool::getInstance();
-	if(!pool)
+	if (!pool)
 	{
 		capture.clear();
 
@@ -546,8 +546,11 @@ bool Engine::init()
 void Engine::end()
 {
 	valid = false;
-	PoolThread::Instance->setFinish();
-	delete PoolThread::Instance;
+	if (PoolThread::Instance)
+	{
+		PoolThread::Instance->setFinish();
+		delete PoolThread::Instance;
+	}
 	delete pool;
 
 	capture.clear();
@@ -569,8 +572,10 @@ void Engine::end()
 	}
 #endif
 	alcMakeContextCurrent(nullptr);
-	alcDestroyContext(context);
-	alcCloseDevice(device);
+	if (context)
+		alcDestroyContext(context);
+	if (device)
+		alcCloseDevice(device);
 }
 
 

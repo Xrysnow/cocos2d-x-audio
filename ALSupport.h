@@ -20,5 +20,6 @@ namespace audio
 		static ALenum getBufferFormat(const std::string& name);
 		static bool hasALEXT(const std::string& name);
 		static bool hasALCEXT(const std::string& name);
+		static void refresh();
 	};
 }

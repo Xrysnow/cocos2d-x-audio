@@ -1,117 +1,124 @@
 ﻿#include "ALSupport.h"
 #include <unordered_map>
+#include <mutex>
 
 using namespace std;
 using namespace audio;
 
-bool _isLoaded = false;
-bool _has_ALC_ENUMERATE_ALL_EXT = true;
-vector<string> DeviceNames;
-string DefaultDeviceName;
-vector<string> CaptureDeviceNames;
-string DefaultCaptureDeviceName;
+namespace
+{
+	std::mutex InitMutex;
+	bool IsInfoValid = false;
+	bool Has_ALC_ENUMERATE_ALL_EXT = true;
+	vector<string> DeviceNames;
+	string DefaultDeviceName;
+	vector<string> CaptureDeviceNames;
+	string DefaultCaptureDeviceName;
 
-vector<string> PossibleBufferFormats = {
-	"AL_FORMAT_MONO8",
-	"AL_FORMAT_MONO16",
-	"AL_FORMAT_STEREO8",
-	"AL_FORMAT_STEREO16",
-	// AL_LOKI_IMA_ADPCM_format
-	"AL_FORMAT_IMA_ADPCM_MONO16_EXT",
-	"AL_FORMAT_IMA_ADPCM_STEREO16_EXT",
-	// AL_LOKI_WAVE_format
-	"AL_FORMAT_WAVE_EXT",
-	// AL_EXT_vorbis
-	"AL_FORMAT_VORBIS_EXT",
-	// AL_LOKI_quadriphonic
-	"AL_FORMAT_QUAD8_LOKI",
-	"AL_FORMAT_QUAD16_LOKI",
-	// AL_EXT_float32
-	"AL_FORMAT_MONO_FLOAT32",
-	"AL_FORMAT_STEREO_FLOAT32",
-	// AL_EXT_double
-	"AL_FORMAT_MONO_DOUBLE_EXT",
-	"AL_FORMAT_STEREO_DOUBLE_EXT",
-	// AL_EXT_MULAW
-	"AL_FORMAT_MONO_MULAW_EXT",
-	"AL_FORMAT_STEREO_MULAW_EXT",
-	// AL_EXT_ALAW
-	"AL_FORMAT_MONO_ALAW_EXT",
-	"AL_FORMAT_STEREO_ALAW_EXT",
-	// AL_EXT_MCFORMATS
-	"AL_FORMAT_QUAD8",
-	"AL_FORMAT_QUAD16",
-	"AL_FORMAT_QUAD32",
-	"AL_FORMAT_REAR8",
-	"AL_FORMAT_REAR16",
-	"AL_FORMAT_REAR32",
-	"AL_FORMAT_51CHN8",
-	"AL_FORMAT_51CHN16",
-	"AL_FORMAT_51CHN32",
-	"AL_FORMAT_61CHN8",
-	"AL_FORMAT_61CHN16",
-	"AL_FORMAT_61CHN32",
-	"AL_FORMAT_71CHN8",
-	"AL_FORMAT_71CHN16",
-	"AL_FORMAT_71CHN32",
-	// AL_EXT_MULAW_MCFORMATS
-	"AL_FORMAT_MONO_MULAW",
-	"AL_FORMAT_STEREO_MULAW",
-	"AL_FORMAT_QUAD_MULAW",
-	"AL_FORMAT_REAR_MULAW",
-	"AL_FORMAT_51CHN_MULAW",
-	"AL_FORMAT_61CHN_MULAW",
-	"AL_FORMAT_71CHN_MULAW",
-	// AL_EXT_IMA4
-	"AL_FORMAT_MONO_IMA4",
-	"AL_FORMAT_STEREO_IMA4",
-	// AL_SOFT_MSADPCM
-	"AL_FORMAT_MONO_MSADPCM_SOFT",
-	"AL_FORMAT_STEREO_MSADPCM_SOFT",
-	// AL_EXT_BFORMAT
-	"AL_FORMAT_BFORMAT2D_8",
-	"AL_FORMAT_BFORMAT2D_16",
-	"AL_FORMAT_BFORMAT2D_FLOAT32",
-	"AL_FORMAT_BFORMAT3D_8",
-	"AL_FORMAT_BFORMAT3D_16",
-	"AL_FORMAT_BFORMAT3D_FLOAT32",
-	// AL_EXT_MULAW_BFORMAT
-	"AL_FORMAT_BFORMAT2D_MULAW",
-	"AL_FORMAT_BFORMAT3D_MULAW",
-};
-unordered_map<string, ALenum> SupportedBufferFormats;
+	unordered_map<string, ALenum> SupportedBufferFormats;
+	unordered_map<string, bool> SupportedALExtensions;
+	unordered_map<string, bool> SupportedALCExtensions;
+	string ReadableInfo;
 
-vector<string> PossibleALExtensions = {
-	"AL_EXT_vorbis",
-	"AL_EXT_float32",
-	"AL_EXT_double",
-	"AL_EXT_MULAW",
-	"AL_EXT_ALAW",
-	"AL_EXT_MCFORMATS",
-	"AL_EXT_MULAW_MCFORMATS",
-	"AL_EXT_IMA4",
-	"AL_EXT_STATIC_BUFFER",
-	"AL_EXT_source_distance_model",
-	"AL_EXT_FOLDBACK",
-	"AL_EXT_STEREO_ANGLES",
-	"AL_EXT_SOURCE_RADIUS",
-	"AL_EXT_BFORMAT",
-	"AL_EXT_MULAW_BFORMAT",
-};
-unordered_map<string, bool> SupportedALExtensions;
+	vector<string> PossibleBufferFormats = {
+		"AL_FORMAT_MONO8",
+		"AL_FORMAT_MONO16",
+		"AL_FORMAT_STEREO8",
+		"AL_FORMAT_STEREO16",
+		// AL_LOKI_IMA_ADPCM_format
+		"AL_FORMAT_IMA_ADPCM_MONO16_EXT",
+		"AL_FORMAT_IMA_ADPCM_STEREO16_EXT",
+		// AL_LOKI_WAVE_format
+		"AL_FORMAT_WAVE_EXT",
+		// AL_EXT_vorbis
+		"AL_FORMAT_VORBIS_EXT",
+		// AL_LOKI_quadriphonic
+		"AL_FORMAT_QUAD8_LOKI",
+		"AL_FORMAT_QUAD16_LOKI",
+		// AL_EXT_float32
+		"AL_FORMAT_MONO_FLOAT32",
+		"AL_FORMAT_STEREO_FLOAT32",
+		// AL_EXT_double
+		"AL_FORMAT_MONO_DOUBLE_EXT",
+		"AL_FORMAT_STEREO_DOUBLE_EXT",
+		// AL_EXT_MULAW
+		"AL_FORMAT_MONO_MULAW_EXT",
+		"AL_FORMAT_STEREO_MULAW_EXT",
+		// AL_EXT_ALAW
+		"AL_FORMAT_MONO_ALAW_EXT",
+		"AL_FORMAT_STEREO_ALAW_EXT",
+		// AL_EXT_MCFORMATS
+		"AL_FORMAT_QUAD8",
+		"AL_FORMAT_QUAD16",
+		"AL_FORMAT_QUAD32",
+		"AL_FORMAT_REAR8",
+		"AL_FORMAT_REAR16",
+		"AL_FORMAT_REAR32",
+		"AL_FORMAT_51CHN8",
+		"AL_FORMAT_51CHN16",
+		"AL_FORMAT_51CHN32",
+		"AL_FORMAT_61CHN8",
+		"AL_FORMAT_61CHN16",
+		"AL_FORMAT_61CHN32",
+		"AL_FORMAT_71CHN8",
+		"AL_FORMAT_71CHN16",
+		"AL_FORMAT_71CHN32",
+		// AL_EXT_MULAW_MCFORMATS
+		"AL_FORMAT_MONO_MULAW",
+		"AL_FORMAT_STEREO_MULAW",
+		"AL_FORMAT_QUAD_MULAW",
+		"AL_FORMAT_REAR_MULAW",
+		"AL_FORMAT_51CHN_MULAW",
+		"AL_FORMAT_61CHN_MULAW",
+		"AL_FORMAT_71CHN_MULAW",
+		// AL_EXT_IMA4
+		"AL_FORMAT_MONO_IMA4",
+		"AL_FORMAT_STEREO_IMA4",
+		// AL_SOFT_MSADPCM
+		"AL_FORMAT_MONO_MSADPCM_SOFT",
+		"AL_FORMAT_STEREO_MSADPCM_SOFT",
+		// AL_EXT_BFORMAT
+		"AL_FORMAT_BFORMAT2D_8",
+		"AL_FORMAT_BFORMAT2D_16",
+		"AL_FORMAT_BFORMAT2D_FLOAT32",
+		"AL_FORMAT_BFORMAT3D_8",
+		"AL_FORMAT_BFORMAT3D_16",
+		"AL_FORMAT_BFORMAT3D_FLOAT32",
+		// AL_EXT_MULAW_BFORMAT
+		"AL_FORMAT_BFORMAT2D_MULAW",
+		"AL_FORMAT_BFORMAT3D_MULAW",
+	};
 
-vector<string> PossibleALCExtensions = {
-	"ALC_EXT_EFX",
-	"ALC_EXT_disconnect",
-	"ALC_EXT_thread_local_context",
-	"ALC_EXT_DEDICATED",
-	"ALC_EXT_DEFAULT_FILTER_ORDER",
-};
-unordered_map<string, bool> SupportedALCExtensions;
+	vector<string> PossibleALExtensions = {
+		"AL_EXT_vorbis",
+		"AL_EXT_float32",
+		"AL_EXT_double",
+		"AL_EXT_MULAW",
+		"AL_EXT_ALAW",
+		"AL_EXT_MCFORMATS",
+		"AL_EXT_MULAW_MCFORMATS",
+		"AL_EXT_IMA4",
+		"AL_EXT_STATIC_BUFFER",
+		"AL_EXT_source_distance_model",
+		"AL_EXT_FOLDBACK",
+		"AL_EXT_STEREO_ANGLES",
+		"AL_EXT_SOURCE_RADIUS",
+		"AL_EXT_BFORMAT",
+		"AL_EXT_MULAW_BFORMAT",
+	};
 
-string ReadableInfo;
+	vector<string> PossibleALCExtensions = {
+		"ALC_EXT_EFX",
+		"ALC_EXT_disconnect",
+		"ALC_EXT_thread_local_context",
+		"ALC_EXT_DEDICATED",
+		"ALC_EXT_DEFAULT_FILTER_ORDER",
+		"ALC_SOFT_reopen_device",
+		"ALC_SOFT_system_events",
+	};
+}
 
-vector<string> SplitAlString(const char* str)
+static vector<string> SplitAlString(const char* str)
 {
 	vector<string> ret;
 	if (!str) return ret;
@@ -131,9 +138,9 @@ vector<string> SplitAlString(const char* str)
 	return ret;
 }
 
-void GetDeviceNames()
+static void GetDeviceNames()
 {
-	if (!_has_ALC_ENUMERATE_ALL_EXT)
+	if (!Has_ALC_ENUMERATE_ALL_EXT)
 	{
 		AINFO("ALC_ENUMERATE_ALL_EXT is not supported");
 		return;
@@ -162,29 +169,28 @@ void GetDeviceNames()
 	}
 }
 
-void GetCaptureDeviceNames()
+static void GetCaptureDeviceNames()
 {
 	const ALCchar *defaultDeviceName = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
 	if(defaultDeviceName)
 		DefaultCaptureDeviceName = string(defaultDeviceName);
-	if (!_has_ALC_ENUMERATE_ALL_EXT)
+	if (!Has_ALC_ENUMERATE_ALL_EXT)
 		return;
 	const ALCchar *devices = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
 	CaptureDeviceNames = SplitAlString(devices);
 }
 
-void GetBufferFormats()
+static void GetBufferFormats()
 {
-	ALenum format;
 	for (auto& f : PossibleBufferFormats)
 	{
-		format = alGetEnumValue(f.c_str());
+		ALenum format = alGetEnumValue(f.c_str());
 		if (format)
 			SupportedBufferFormats[f] = format;
 	}
 }
 
-void GetAlExtensions()
+static void GetAlExtensions()
 {
 	for (auto& e : PossibleALExtensions)
 	{
@@ -193,7 +199,7 @@ void GetAlExtensions()
 	}
 }
 
-void GetAlcExtensions()
+static void GetAlcExtensions()
 {
 	for (auto& e : PossibleALCExtensions)
 	{
@@ -202,7 +208,7 @@ void GetAlcExtensions()
 	}
 }
 
-string GetReadableInfo()
+static string GetReadableInfo()
 {
 	string ret;
 
@@ -259,18 +265,25 @@ string GetReadableInfo()
 	return ret;
 }
 
-void ALSupport::init()
+static void discover()
 {
-	if (_isLoaded)return;
 	if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT") != AL_TRUE)
-		_has_ALC_ENUMERATE_ALL_EXT = false;
+		Has_ALC_ENUMERATE_ALL_EXT = false;
 	GetDeviceNames();
 	GetCaptureDeviceNames();
 	GetBufferFormats();
 	GetAlExtensions();
 	GetAlcExtensions();
 	ReadableInfo = GetReadableInfo();
-	_isLoaded = true;
+	IsInfoValid = true;
+}
+
+void ALSupport::init()
+{
+	std::lock_guard lock(InitMutex);
+	if (IsInfoValid)
+		return;
+	discover();
 }
 
 string ALSupport::getReadableInfo()
@@ -324,4 +337,11 @@ bool ALSupport::hasALCEXT(const string& name)
 	init();
 	const auto it = SupportedALCExtensions.find(name);
 	return it != SupportedALCExtensions.end();
+}
+
+void ALSupport::refresh()
+{
+	std::lock_guard lock(InitMutex);
+	IsInfoValid = false;
+	discover();
 }

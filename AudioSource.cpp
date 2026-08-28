@@ -4,6 +4,8 @@
 #include "AudioEngine.h"
 #include "AudioFilter.h"
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
 
 using namespace audio;
 
@@ -14,15 +16,44 @@ constexpr double TODEG_ = 180.0 / PI;
 #define TODEG(x)	(float)(x*TODEG_)
 
 StaticDataBuffer::StaticDataBuffer(ALenum format, const ALvoid *data, ALsizei size, ALsizei freq)
-	: buffer(0), size(size)
+	: buffer(0)
+	, size(size)
+	, data()
+	, format(format)
+	, freq(freq)
+	, generation(Engine::getDeviceGeneration())
 {
+	// Keep a private PCM copy so the buffer can be re-uploaded after a
+	// context recreation (the Source does not hold the original SoundData).
+	if (size > 0 && data)
+	{
+		this->data.resize(size);
+		memcpy(this->data.data(), data, size);
+	}
 	alGenBuffers(1, &buffer);
 	alBufferData(buffer, format, data, size, freq);
 }
 
 StaticDataBuffer::~StaticDataBuffer()
 {
-	alDeleteBuffers(1, &buffer);
+	// Skip the AL delete when the context that created the buffer is gone
+	// to avoid free an unrelated buffer of a newer context.
+	if (Engine::getDeviceGeneration() == generation)
+		alDeleteBuffers(1, &buffer);
+}
+
+void StaticDataBuffer::reload()
+{
+	// Already current (several Sources may share this buffer).
+	if (generation == Engine::getDeviceGeneration())
+		return;
+
+	// The old id belongs to a destroyed context - never delete it, just
+	// replace it and re-upload the retained PCM.
+	buffer = 0;
+	alGenBuffers(1, &buffer);
+	alBufferData(buffer, format, data.data(), size, freq);
+	generation = Engine::getDeviceGeneration();
 }
 
 Source::Source()
@@ -54,6 +85,10 @@ bool Source::initWithSoundData(SoundData* soundData)
 	position.setZero();
 	velocity.setZero();
 	direction.setZero();
+
+	// Remember which device generation the buffer ids were created for, so
+	// prepareAtomic() can detect stale ids after a context recreation.
+	bufferGeneration = Engine::getDeviceGeneration();
 
 	for (int i = 0; i < Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
@@ -105,6 +140,8 @@ bool Source::initWithDecoder(Decoder* _decoder)
 	velocity.setZero();
 	direction.setZero();
 
+	bufferGeneration = Engine::getDeviceGeneration();
+
 	for (int i = 0; i < Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
 	return true;
@@ -148,6 +185,8 @@ bool Source::init(int _sampleRate, int _bitDepth, int _channels, int _buffers)
 	position.setZero();
 	velocity.setZero();
 	direction.setZero();
+
+	bufferGeneration = Engine::getDeviceGeneration();
 
 	for (int i = 0; i < Engine::getMaxSourceEffectCount(); i++)
 		slotlist.push(i);
@@ -203,6 +242,8 @@ bool Source::initWithOther(const Source &s)
 		}
 	}
 
+	bufferGeneration = Engine::getDeviceGeneration();
+
 	if (s.directfilter)
 		directfilter = s.directfilter->clone();
 
@@ -240,15 +281,19 @@ Source::~Source()
 
 	if (sourceType != Type::STATIC)
 	{
-		while (!streamBuffers.empty())
+		// Skip the AL deletes when the context that created these ids is gone
+		if (bufferGeneration == Engine::getDeviceGeneration())
 		{
-			alDeleteBuffers(1, &streamBuffers.front());
-			streamBuffers.pop();
-		}
-		while (!unusedBuffers.empty())
-		{
-			alDeleteBuffers(1, &unusedBuffers.top());
-			unusedBuffers.pop();
+			while (!streamBuffers.empty())
+			{
+				alDeleteBuffers(1, &streamBuffers.front());
+				streamBuffers.pop();
+			}
+			while (!unusedBuffers.empty())
+			{
+				alDeleteBuffers(1, &unusedBuffers.top());
+				unusedBuffers.pop();
+			}
 		}
 	}
 
@@ -922,6 +967,11 @@ void Source::prepareAtomic()
 	// of the new one.
 	reset();
 
+	// If the OpenAL context was recreated (device recovery after an unplug),
+	// every AL id we hold is stale - regenerate before use.
+	if (bufferGeneration != Engine::getDeviceGeneration())
+		regenerateBuffers();
+
 	switch (sourceType)
 	{
 	case Type::STATIC:
@@ -955,6 +1005,67 @@ void Source::prepareAtomic()
 	}
 	// Seek to the current/pending offset.
 	alSourcei(source, AL_SAMPLE_OFFSET, offsetSamples);
+}
+
+void Source::regenerateBuffers()
+{
+	// The context this Source's buffers were created in is gone; all ALuints
+	// are stale and are NOT deleted here (they belong to the destroyed
+	// context, ids may collide with freshly created objects).
+	switch (sourceType)
+	{
+	case Type::STATIC:
+		// Re-upload from the retained PCM copy (StaticDataBuffer::reload).
+		if (staticBuffer)
+			staticBuffer->reload();
+		break;
+
+	case Type::STREAM:
+	{
+		// Fresh ids; the Decoder is not an AL object - it survived the
+		// context swap and still sits at the frame it decoded up to, so the
+		// stream continues where it was.
+		while (!unusedBuffers.empty())
+			unusedBuffers.pop();
+		while (!streamBuffers.empty())
+			streamBuffers.pop();
+		for (int i = 0; i < buffers; i++)
+		{
+			ALuint buf;
+			alGenBuffers(1, &buf);
+			if (alGetError() == AL_NO_ERROR)
+				unusedBuffers.push(buf);
+			else
+				break;
+		}
+		break;
+	}
+
+	case Type::QUEUE:
+	{
+		// Queued payloads are not retained: only fresh ids are provided so
+		// the application can queueData()/queue() on this Source again.
+		while (!unusedBuffers.empty())
+			unusedBuffers.pop();
+		while (!streamBuffers.empty())
+			streamBuffers.pop();
+		for (int i = 0; i < buffers; i++)
+		{
+			ALuint buf;
+			alGenBuffers(1, &buf);
+			if (alGetError() == AL_NO_ERROR)
+				unusedBuffers.push(buf);
+			else
+				break;
+		}
+		break;
+	}
+
+	case Type::MAX_ENUM:
+		break;
+	}
+
+	bufferGeneration = Engine::getDeviceGeneration();
 }
 
 void Source::teardownAtomic()

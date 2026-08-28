@@ -1,12 +1,14 @@
-﻿#pragma once
+#pragma once
 #include "AudioPool.h"
 #include "AudioFilter.h"
 #include "AudioCommon.h"
 #include "base/CCRef.h"
 #include "math/Vec3.h"
 #include <array>
+#include <cstdint>
 #include <limits>
 #include <stack>
+#include <vector>
 
 namespace audio
 {
@@ -35,9 +37,32 @@ namespace audio
 		ALsizei getSize() const {
 			return size;
 		}
+
+		/**
+		 * Re-uploads the buffer after the OpenAL context was recreated
+		 * (audio device disconnect recovery): the previous AL id died with
+		 * the context, so a fresh id is generated and the retained PCM copy
+		 * is uploaded again. Updates the generation, so later calls are
+		 * cheap no-ops.
+		 */
+		void reload();
+
+		/**
+		 * The Engine device generation this buffer was created/uploaded for.
+		 * If it differs from Engine::getDeviceGeneration(), the stored AL id
+		 * is stale and the buffer must be reloaded (see reload()).
+		 */
+		int getGeneration() const {
+			return generation;
+		}
 	private:
 		ALuint buffer;
 		ALsizei size;
+		// Retained data copy for re-uploading after a context recreation
+		std::vector<uint8_t> data;
+		ALenum format;
+		ALsizei freq;
+		int generation;
 	};
 
 	/**
@@ -410,6 +435,9 @@ namespace audio
 
 		void prepareAtomic();
 		void teardownAtomic();
+		/** Recreates all AL objects after the context was recreated (device
+		 *  disconnect recovery); updates bufferGeneration. */
+		void regenerateBuffers();
 
 		bool playAtomic(ALuint source);
 		void stopAtomic();
@@ -469,6 +497,12 @@ namespace audio
 		ALuint source = 0;
 		bool valid = false;
 		std::string lastError;
+
+		// The Engine device generation the current AL ids (buffers, stream
+		// buffers) were created for. prepareAtomic() compares it with
+		// Engine::getDeviceGeneration() and regenerates the ids when the
+		// context was recreated (device disconnect recovery).
+		int bufferGeneration = 0;
 
 		const static int DEFAULT_BUFFERS = 8;
 		const static int MAX_BUFFERS = 64;

@@ -237,9 +237,81 @@ namespace audio
 		static bool init();
 		static void end();
 
+		/**
+		 * The "device generation": incremented whenever the OpenAL context is
+		 * (re)created or destroyed.
+		 */
+		static int getDeviceGeneration();
+
+		// ---------------------------------------------------------------------
+		// Audio device management overview
+		// ---------------------------------------------------------------------
+		//
+		// Problem: OpenAL Soft fixes the output endpoint when the device is
+		// opened. When the OS default changes or the device is unplugged, the
+		// context keeps mixing into the old (silent) endpoint.
+		//
+		// Detection (checkDeviceChange(), run ~200ms from the PoolThread):
+		//  1. ALC_SOFT_system_events notifications (callback only raises an
+		//     atomic flag - it is not allowed to call any OpenAL function);
+		//  2. polling alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
+		//  3. ALC_EXT_disconnect/ALC_CONNECTED, i.e. the CURRENT open device
+		//     was physically removed.
+		//
+		// Handling:
+		//  * Default changed, device still present -> reopenDevice(""):
+		//    alcReopenDeviceSOFT(device, NULL, attribs) replaces the device
+		//    under the existing context - context, Sources, buffers, effects
+		//    and playback positions survive; sound moves over seamlessly.
+		//    deviceName NULL is mandatory here: the ALC_DEFAULT*_DEVICE_
+		//    SPECIFIER strings are cached snapshots on Windows and still name
+		//    the OLD endpoint right after a change - pre-resolving them (or
+		//    skipping on "name == lastAppliedDevice") is exactly what made
+		//    the audio never switch.
+		//  * Current device unplugged -> recoverDisconnectedDevice(): a dead
+		//    ALCdevice cannot be revived by alcReopenDeviceSOFT (it keeps
+		//    reporting ALC_CONNECTED == ALC_FALSE), so the device+context is
+		//    recreated - this makes the audio come back at all. The device
+		//    generation is bumped; Sources that were playing/paused before
+		//    the teardown are replayed automatically and regenerate their AL
+		//    objects lazily (statics re-upload a retained PCM copy, streams
+		//    continue from their decoder position; queue sources must be
+		//    re-queued by the application).
+		//  * Extension unavailable or reopen failed -> the current device is
+		//    kept untouched, playback continues there (pre-fix behavior); a
+		//    pinned device (reopenDevice with a name) is never overridden by
+		//    default changes.
+		// ---------------------------------------------------------------------
+
+		/**
+		 * Switches the playback device in place (ALC_SOFT_reopen_device).
+		 * @param name Empty: follow the current system default (NULL is passed
+		 *             to alcReopenDeviceSOFT, see overview); non-empty: switch
+		 *             to that exact device name and pin it.
+		 * @return True on success; otherwise the current device is kept.
+		 */
+		static bool reopenDevice(const std::string& name = std::string());
+
+		/**
+		 * Periodically checks for device changes and transparently follows the
+		 * default device (see the overview above). Called from the PoolThread.
+		 */
+		static void checkDeviceChange();
+
 	private:
 
 		static void initializeEFX();
+		/** Allocates the context's EFX aux effect slots. */
+		static void createEffectSlots();
+		/** Registers the ALC_SOFT_system_events callback. */
+		static void initializeDeviceEvents();
+		/**
+		 * Recreation path for an unplugged/failed device (see overview):
+		 * builds a fresh device+context on the current default, restores the
+		 * engine state and auto-resumes the captured Sources. QUEUE sources
+		 * are skipped (payloads are not retained; re-queue to play again).
+		 */
+		static bool recoverDisconnectedDevice();
 
 		static bool valid;
 		// The OpenAL device.
@@ -271,6 +343,15 @@ namespace audio
 		//static float metersPerUnit = 1.0;
 
 		static std::string lastError;
+
+		// Audio device management
+
+		static LPALCREOPENDEVICESOFT alcReopenDeviceSoft;
+		static ALint initAttribs[4];
+		static bool hasInitAttribs;
+		static std::string lastAppliedDevice;
+		static std::string lastDefaultName;
+		static bool devicePinned;
 	};
 
 #ifdef ALC_EXT_EFX

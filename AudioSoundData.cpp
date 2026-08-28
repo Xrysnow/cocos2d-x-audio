@@ -2,10 +2,9 @@
 #include "AudioDecoder.h"
 #include "AudioEngine.h"
 
-#include <cstdlib>
 #include <cstring>
 #include <limits>
-#include <iostream>
+#include <new>
 #include <vector>
 
 using namespace audio;
@@ -71,8 +70,7 @@ SoundData::SoundData(Decoder *decoder)
 */
 
 SoundData::SoundData(int samples, int sampleRate, int bitDepth, int channels)
-	: data(0)
-	, size(0)
+	: data()
 	, sampleRate(0)
 	, bitDepth(0)
 	, channels(0)
@@ -81,8 +79,7 @@ SoundData::SoundData(int samples, int sampleRate, int bitDepth, int channels)
 }
 
 SoundData::SoundData(void *d, int samples, int sampleRate, int bitDepth, int channels)
-	: data(0)
-	, size(0)
+	: data()
 	, sampleRate(0)
 	, bitDepth(0)
 	, channels(0)
@@ -91,8 +88,7 @@ SoundData::SoundData(void *d, int samples, int sampleRate, int bitDepth, int cha
 }
 
 SoundData::SoundData(const SoundData &c)
-	: data(0)
-	, size(0)
+	: data()
 	, sampleRate(0)
 	, bitDepth(0)
 	, channels(0)
@@ -102,8 +98,6 @@ SoundData::SoundData(const SoundData &c)
 
 SoundData::~SoundData()
 {
-	if (data)
-		free(data);
 }
 
 SoundData *SoundData::clone() const
@@ -133,16 +127,11 @@ void SoundData::load(int samples, int sampleRate, int bitDepth, int channels, vo
 		Exception("Invalid channel count: %d", channels);
 	}
 
-	if (data)
-	{
-		free(data);
-		data = nullptr;
-	}
-
-	size = samples * (bitDepth / 8) * channels;
 	this->sampleRate = sampleRate;
 	this->bitDepth = bitDepth;
 	this->channels = channels;
+
+	const size_t bytes = (size_t)samples * (size_t)(bitDepth / 8) * (size_t)channels;
 
 	double realsize = samples;
 	realsize *= (double)bitDepth / 8 * channels;
@@ -151,26 +140,29 @@ void SoundData::load(int samples, int sampleRate, int bitDepth, int channels, vo
 		Exception("Data is too big!");
 	}
 
-	data = (uint8_t*)malloc(size);
-	if (!data)
+	try
+	{
+		data.resize(bytes);
+	}
+	catch (const std::bad_alloc&)
 	{
 		Exception("Not enough memory.");
 	}
 
 	if (newData)
-		memcpy(data, newData, size);
+		memcpy(data.data(), newData, bytes);
 	else
-		memset(data, bitDepth == 8 ? 128 : 0, size);
+		memset(data.data(), bitDepth == 8 ? 128 : 0, bytes);
 }
 
 void *SoundData::getData() const
 {
-	return (void *)data;
+	return (void *)data.data();
 }
 
 size_t SoundData::getSize() const
 {
-	return size;
+	return data.size();
 }
 
 int SoundData::getChannelCount() const
@@ -190,18 +182,18 @@ int SoundData::getSampleRate() const
 
 int SoundData::getSampleCount() const
 {
-	return (int)((size / channels) / (bitDepth / 8));
+	return (int)((data.size() / channels) / (bitDepth / 8));
 }
 
 double SoundData::getDuration() const
 {
-	return double(size) / (double(channels) * sampleRate * bitDepth / 8);
+	return double(data.size()) / (double(channels) * sampleRate * bitDepth / 8);
 }
 
 void SoundData::setSample(int i, float sample)
 {
 	// Check range.
-	if (i < 0 || (size_t)i >= size / (bitDepth / 8))
+	if (i < 0 || (size_t)i >= data.size() / (bitDepth / 8))
 	{
 		Exception("Attempt to set out-of-range sample!");
 	}
@@ -209,7 +201,7 @@ void SoundData::setSample(int i, float sample)
 	if (bitDepth == 16)
 	{
 		// 16-bit sample values are signed.
-		int16_t *s = (int16_t *)data;
+		int16_t *s = (int16_t *)data.data();
 		s[i] = (int16_t)(sample * (float)INT16_MAX);
 	}
 	else
@@ -232,7 +224,7 @@ void SoundData::setSample(int i, int channel, float sample)
 float SoundData::getSample(int i)
 {
 	// Check range.
-	if (i < 0 || (size_t)i >= size / (bitDepth / 8))
+	if (i < 0 || (size_t)i >= data.size() / (bitDepth / 8))
 	{
 		lastError = string_format("Attempt to get out-of-range sample!");
 		return 0;
@@ -241,7 +233,7 @@ float SoundData::getSample(int i)
 	if (bitDepth == 16)
 	{
 		// 16-bit sample values are signed.
-		int16_t *s = (int16_t *)data;
+		int16_t *s = (int16_t *)data.data();
 		return (float)s[i] / (float)INT16_MAX;
 	}
 	else

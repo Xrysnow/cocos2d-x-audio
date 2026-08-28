@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace audio
 {
@@ -70,8 +71,7 @@ namespace audio
 
 		void load(int samples, int sampleRate, int bitDepth, int channels, void *newData = 0);
 
-		uint8_t* data;
-		size_t size;
+		std::vector<uint8_t> data;
 
 		int sampleRate;
 		int bitDepth;

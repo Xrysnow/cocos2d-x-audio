@@ -2,6 +2,8 @@
 #include "AudioDecoderWav.h"
 #include "NqrRiffUtils.h"
 #include <algorithm>
+#include <new>
+#include <vector>
 
 using namespace nqr;
 using namespace audio;
@@ -36,7 +38,7 @@ bool DecoderWav::init(Stream* src)
 	if (!stream)
 		return false;
 	std::string msg;
-	uint8_t* tempBuffer = nullptr;
+	std::vector<uint8_t> tempBufferData;
 	bool ret = false;
 	stream->lock();
 	stream->seek(Stream::SeekOrigin::BEGINNING, 0);
@@ -66,11 +68,16 @@ bool DecoderWav::init(Stream* src)
 			break;
 		}
 		// note: assume that header is smaller than 256B
-		tempBuffer = (uint8_t*)malloc(256);
-		if (!tempBuffer) {
-			msg = "failed to allocate temperary buffer";
+		try
+		{
+			tempBufferData.resize(256);
+		}
+		catch (const std::bad_alloc&)
+		{
+			msg = "failed to allocate temporary buffer";
 			break;
 		}
+		auto tempBuffer = tempBufferData.data();
 		uint64_t bufferLength;
 		stream->seek(Stream::SeekOrigin::BEGINNING, 0);
 		stream->read(tempBuffer, 256, &bufferLength);
@@ -182,8 +189,6 @@ bool DecoderWav::init(Stream* src)
 	}
 	while (false);
 	stream->unlock();
-	if (tempBuffer)
-		free(tempBuffer);
 	if (!msg.empty())
 	{
 		AINFO("%s", msg.c_str());

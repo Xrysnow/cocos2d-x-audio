@@ -32,12 +32,11 @@ Decoder::Decoder(size_t bufferSize, DecoderType type)
 	: decoderType(type)
 	, bufferSize(bufferSize)
 {
-	buffer = new int8_t[bufferSize];
+	buffer.resize(bufferSize);
 }
 
 Decoder::~Decoder()
 {
-	delete[] buffer;
 }
 
 Decoder::DecoderType Decoder::getDecoderTypeFromPath(const std::string& path)
@@ -101,9 +100,9 @@ Decoder* Decoder::createFromSoundData(SoundData* soundData, size_t bufferSize, D
 	return createFromStream(Stream::createFromSoundData(soundData), bufferSize, type);
 }
 
-int8_t* Decoder::getBuffer() const
+const uint8_t* Decoder::getBuffer() const
 {
-	return buffer;
+	return buffer.data();
 }
 
 bool Decoder::seekTime(double seconds)
@@ -126,7 +125,7 @@ int64_t Decoder::decode()
 	if (exceed > 0)
 		toReadSize -= exceed * getBytesPerFrame();
 	toReadSize = std::max<int64_t>(toReadSize, 0);
-	const int64_t size = decode((char*)buffer, toReadSize);
+	const int64_t size = decode((char*)buffer.data(), toReadSize);
 	if (size > 0)
 		bufferPosition = tCurSample;
 	if (exceed > 0 && size == toReadSize)

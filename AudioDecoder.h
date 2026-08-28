@@ -1,7 +1,9 @@
 ﻿#pragma once
 #include "AudioStream.h"
 #include "base/CCRef.h"
+#include <cstdint>
 #include <string>
+#include <vector>
 
 namespace audio
 {
@@ -101,9 +103,10 @@ namespace audio
 		/**
 		 * Gets a pointer to the actual data. The contents of this buffer will
 		 * change with each call to decode, so the client must copy the data.
-		 * @return A buffer to raw sound data.
+		 * The buffer is owned by the Decoder and is read-only for callers.
+		 * @return A read-only view of the raw sound data.
 		 **/
-		virtual int8_t* getBuffer() const;
+		virtual const uint8_t* getBuffer() const;
 
 		/**
 		 * Seeks to the specified position, if possible.
@@ -182,23 +185,21 @@ namespace audio
 		int64_t getLoopStart() const;
 		int64_t getLoopEnd() const;
 
-		DecoderType decoderType;
 		Stream* stream = nullptr;
+		DecoderType decoderType;
 
 		// When the decoder decodes data incrementally, it writes
 		// this many bytes at a time (at most).
 		int bufferSize;
 
-		// Holds internal memory.
-		int8_t* buffer = nullptr;
+		// Decode scratch buffer
+		std::vector<uint8_t> buffer;
 		int64_t bufferPosition = 0;
 
-		// Set this to true when eof has been reached.
-		bool eof = false;
-
 		AudioInfo audioInfo;
-
 		uint64_t loopStart = 0;
 		uint64_t loopEnd = 0;
+		// Set this to true when eof has been reached.
+		bool eof = false;
 	};
 }

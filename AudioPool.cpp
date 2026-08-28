@@ -17,6 +17,12 @@ Pool::~Pool()
 
 bool Pool::init()
 {
+	// Reset state so it can be called again
+	totalSources = 0;
+	while (!available.empty())
+		available.pop();
+	playing.clear();
+
 	// Clear errors.
 	alGetError();
 

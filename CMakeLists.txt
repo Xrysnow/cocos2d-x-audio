@@ -78,6 +78,7 @@ if(BUILD_LUA_LIBS)
 endif()
 
 add_library(${LIB_NAME} STATIC ${SOURCE} ${HEADER})
+target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 add_dependencies(${LIB_NAME} cocos2d)
 use_cocos2dx_compile_define(${LIB_NAME})
 use_cocos2dx_compile_options(${LIB_NAME})
@@ -97,14 +98,13 @@ endif()
 if(ALSOFT_OPENAL_LIBRARY)
     #target_link_libraries(${LIB_NAME} ${ALSOFT_OPENAL_LIBRARY})
     #set_target_properties(${LIB_NAME} PROPERTIES XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS ${ALSOFT_FRAMEWORK_PATH})
-    target_include_directories(${LIB_NAME} PUBLIC ALSOFT_INCLUDE_DIR)
+    target_include_directories(${LIB_NAME} PUBLIC "${ALSOFT_INCLUDE_DIR}")
 endif()
 
 set_target_properties(${LIB_NAME}
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 if(XCODE OR VS)
